@@ -16,7 +16,9 @@ public static class DependencyInjection
     {
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+        
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        
         services.AddIdentity<AppUser, IdentityRole<int>>()
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
