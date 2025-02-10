@@ -7,7 +7,7 @@ namespace Infrastructure.DataAccess.Repositories;
         where T : class
     {
         private readonly AppDbContext _context;
-        protected DbSet<T> dbSet;
+        private DbSet<T> dbSet;
 
         public GenericRepository(AppDbContext context)
         {
@@ -15,21 +15,21 @@ namespace Infrastructure.DataAccess.Repositories;
             dbSet = _context.Set<T>();
         }
 
-        public async Task AddAsync(T Entity)
+        public async Task AddAsync(T entity)
         {
-            await dbSet.AddAsync(Entity);
+            await dbSet.AddAsync(entity);
         }
 
-        public async Task AddBulkAsync(IEnumerable<T> Entities)
+        public async Task AddBulkAsync(IEnumerable<T> entities)
         {
             _context.ChangeTracker.AutoDetectChangesEnabled = false;
-            await dbSet.AddRangeAsync(Entities);
+            await dbSet.AddRangeAsync(entities);
             _context.ChangeTracker.AutoDetectChangesEnabled = true;
         }
 
-        public Task DeleteAsync(T Entity)
+        public Task DeleteAsync(T entity)
         {
-            dbSet.Remove(Entity);
+            dbSet.Remove(entity);
             return Task.CompletedTask;
         }
 
@@ -72,10 +72,10 @@ namespace Infrastructure.DataAccess.Repositories;
             return await query.FirstOrDefaultAsync();
         }
 
-        public Task UpdateAsync(T Entity)
+        public Task UpdateAsync(T entity)
         {
-            dbSet.Attach(Entity);
-            _context.Entry(Entity).State = EntityState.Modified;
+            dbSet.Attach(entity);
+            _context.Entry(entity).State = EntityState.Modified;
             return Task.CompletedTask;
         }
     }
