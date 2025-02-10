@@ -1,5 +1,7 @@
 ﻿using System.Security.Claims;
 using System.Text;
+using Domain.Models;
+using Infrastructure.DataAccess;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -10,13 +12,14 @@ namespace Application.Services;
 public class JwtTokenService(
     IConfiguration configuration,
     TokenValidationParameters tokenValidationParameters,
-    ILogger<JwtTokenService> logger)
+    ILogger<JwtTokenService> logger,
+    IUnitOfWork unitOfWork)
 {
     private readonly IConfiguration _configuration = configuration;
     private readonly TokenValidationParameters _tokenValidationParameters = tokenValidationParameters;
     private readonly ILogger<JwtTokenService> _logger = logger;
 
-    public async Task<string> GenerateJwtToken(IEnumerable<Claim> claims)
+    public async Task<(string token, DateTime expirationDate)> GenerateJwtTokenAsync(IEnumerable<Claim> claims)
     {
         try
         {
@@ -53,7 +56,7 @@ public class JwtTokenService(
                 throw new SecurityTokenValidationException("Generated jwt Failed Validation!");
             }
 
-            return token;
+            return (token, expiresAt);
         }
         catch (Exception e)
         {
@@ -65,7 +68,6 @@ public class JwtTokenService(
     {
         var enhancedClaims = claims.ToList();
 
-        // Add standard JWT claims if not present
         if (enhancedClaims.All(c => c.Type != JwtRegisteredClaimNames.Jti))
         {
             enhancedClaims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
@@ -79,4 +81,21 @@ public class JwtTokenService(
 
         return enhancedClaims;
     }
+
+    public async Task<RefreshToken> GenerateRefreshTokenAsync(int userId)
+    {
+        var refreshToken = new RefreshToken
+        {
+            UserId = userId,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddHours(
+                int.Parse(configuration["Jwt:RefreshTokenExpiryHours"] ?? "5"))
+        };
+        // Removing Old Tokens
+
+        await unitOfWork.RefreshTokenRepository.AddAsync(refreshToken);
+        await unitOfWork.CommitAsync();
+        return refreshToken;
+    }
+    
 }

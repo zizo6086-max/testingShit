@@ -24,4 +24,32 @@ public class AuthController(AuthService authService) : ControllerBase
         }
         return Ok(result);
     }
+
+    [HttpPost("LoginUser")]
+    [AllowAnonymous]
+    public async Task<IActionResult> LoginUser([FromBody] LoginDto loginDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        var result = await authService.LoginAsync(loginDto);
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+        return Ok(result);
+    }
+
+    [HttpPost("RevokeToken")]
+    public async Task<IActionResult> RevokeToken(string refreshToken)
+    {
+        var result = await authService.RevokeTokenAsync(refreshToken,"Ra5ama");
+        if (result)
+        {
+            return BadRequest();
+        }
+
+        return Ok();
+    }
 }
