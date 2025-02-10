@@ -3,38 +3,25 @@ using Domain.Models;
 using Infrastructure.DataAccess;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace Application.Services;
 
-public class AuthService
+public class AuthService(
+    IUnitOfWork unitOfWork,
+    UserManager<AppUser> userManager,
+    RoleManager<IdentityRole<int>> roleManager,
+    IConfiguration configuration)
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly UserManager<AppUser> _userManager;
-    private readonly RoleManager<IdentityRole<int>> _roleManager;
-    private readonly IConfiguration _configuration;
-
-    public AuthService(IUnitOfWork unitOfWork,
-        UserManager<AppUser> userManager,
-        RoleManager<IdentityRole<int>> roleManager,
-        IConfiguration configuration)
-    {
-        _unitOfWork = unitOfWork;
-        _userManager = userManager;
-        _roleManager = roleManager;
-        _configuration = configuration;
-    }
 
     private async Task<Result> CheckExistence(RegisterDto registerDto)
     {
-        var userExists = await _userManager.FindByNameAsync(registerDto.Username);
+        var userExists = await userManager.FindByNameAsync(registerDto.Username);
         var result = new Result();
         if (userExists != null)
         {
             result.Message = "Username already exists!";
             return result;
         }
-        userExists = await _userManager.FindByEmailAsync(registerDto.Email);
+        userExists = await userManager.FindByEmailAsync(registerDto.Email);
         if (userExists != null)
         {
             result.Message = "Email already exists!";
@@ -56,10 +43,10 @@ public class AuthService
             UserName = registerDto.Username,
             Email = registerDto.Email,
         };
-        using var transaction = await _unitOfWork.BeginTransactionAsync();
+        using var transaction = await unitOfWork.BeginTransactionAsync();
         try
         {
-            var creationResult = await _userManager.CreateAsync(newUser, registerDto.Password);
+            var creationResult = await userManager.CreateAsync(newUser, registerDto.Password);
             if (!creationResult.Succeeded)
             {
                 transaction.Rollback();
@@ -67,7 +54,7 @@ public class AuthService
                 result.Message = "Failed to create new user!";
             }
 
-            if (!(await _userManager.AddToRoleAsync(newUser, role)).Succeeded)
+            if (!(await userManager.AddToRoleAsync(newUser, role)).Succeeded)
             {
                 transaction.Rollback();
                 result.Success = false;
@@ -75,7 +62,7 @@ public class AuthService
                 return result;
             }
 
-            await _unitOfWork.CommitAsync();
+            await unitOfWork.CommitAsync();
             transaction.Commit();
             result.Message = "Successfully registered new user!";
             return result;

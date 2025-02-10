@@ -41,9 +41,27 @@ public static class DependencyInjection
                     ClockSkew = TimeSpan.Zero,
                     IssuerSigningKey =
                         new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"]!))
-
                 };
             });
+        return services;
+    }
+
+    public static IServiceCollection AddJwtService(this IServiceCollection services, IConfiguration configuration)
+    {
+        var secretKey = configuration["Jwt:SecretKey"]??
+                        throw new ApplicationException("SecretKey is missing");
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+        
+        services.AddSingleton(new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = false,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = configuration["Jwt:ValidIssuer"],
+            ValidAudience = configuration["Jwt:ValidAudience"],
+            ClockSkew = TimeSpan.Zero,
+            IssuerSigningKey = key
+        });
         return services;
     }
 }

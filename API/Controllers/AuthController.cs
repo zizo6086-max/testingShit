@@ -9,8 +9,6 @@ namespace API.Controllers;
 [ApiController]
 public class AuthController(AuthService authService) : ControllerBase
 {
-    private readonly AuthService _authService = authService;
-
     [HttpPost("RegisterUser")]
     [AllowAnonymous]
     public async Task<IActionResult> RegisterUser([FromBody] RegisterDto registerDto)
@@ -19,7 +17,7 @@ public class AuthController(AuthService authService) : ControllerBase
         {
             return BadRequest(ModelState);
         }
-        var result = await _authService.RegisterAsync(registerDto,"User");
+        var result = await authService.RegisterAsync(registerDto,"User");
         if (!result.Success)
         {
             return BadRequest(result);
