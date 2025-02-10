@@ -11,6 +11,7 @@ public class AppUserConfig:IEntityTypeConfiguration<AppUser>
     {
         builder.Property(u => u.UserName).IsRequired().HasMaxLength(64);
         builder.Property(u => u.RowVersion).IsRowVersion().HasConversion<byte[]>();
+        builder.Property(u=> u.ImageUrl).IsRequired(false);
         var hasher = new PasswordHasher<AppUser>();
         var admin = new AppUser()
         {
