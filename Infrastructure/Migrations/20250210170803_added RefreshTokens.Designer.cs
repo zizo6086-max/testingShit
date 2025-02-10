@@ -4,6 +4,7 @@ using Infrastructure.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250210170803_added RefreshTokens")]
+    partial class addedRefreshTokens
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -107,17 +110,17 @@ namespace Infrastructure.Migrations
                         {
                             Id = 1,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5f4169f3-e93e-4da7-bfa9-e648c2409e41",
-                            CreatedOn = new DateTimeOffset(new DateTime(2025, 2, 10, 18, 17, 14, 768, DateTimeKind.Unspecified).AddTicks(9948), new TimeSpan(0, 0, 0, 0, 0)),
+                            ConcurrencyStamp = "1ff73d56-a910-4f02-9ab7-d75ca49d9279",
+                            CreatedOn = new DateTimeOffset(new DateTime(2025, 2, 10, 17, 8, 3, 202, DateTimeKind.Unspecified).AddTicks(1391), new TimeSpan(0, 0, 0, 0, 0)),
                             Email = "zyadhimself1@gmail.com",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "ZYADHIMSELF1@GMAIL.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEY5t9H7AoIO0DCl0XJGrlJlhVranHJ+yF9cTr7d7XFAuaEUsAk2JoGbD6eR3HIVqA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEL5ssURHn1VcWaLmCT2SAMmH2bM4pZksQ2EAbbXE0OPIVbhA0SYQ7pVJzcQMQySqgA==",
                             PhoneNumberConfirmed = false,
                             RowVersion = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 },
-                            SecurityStamp = "d0d163df-479b-4ccb-a8df-5c2ab3cfaf33",
+                            SecurityStamp = "bb8306a8-4c26-4dd7-90fc-f1bce83e7a1b",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         },
@@ -125,17 +128,17 @@ namespace Infrastructure.Migrations
                         {
                             Id = 2,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c2894e3d-b8d9-42d7-b136-892284cca3ff",
-                            CreatedOn = new DateTimeOffset(new DateTime(2025, 2, 10, 18, 17, 14, 831, DateTimeKind.Unspecified).AddTicks(1666), new TimeSpan(0, 0, 0, 0, 0)),
+                            ConcurrencyStamp = "864991aa-e569-4faf-b39d-5d6cce8548f9",
+                            CreatedOn = new DateTimeOffset(new DateTime(2025, 2, 10, 17, 8, 3, 266, DateTimeKind.Unspecified).AddTicks(4320), new TimeSpan(0, 0, 0, 0, 0)),
                             Email = "zyadhimself1@gmail.com",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "ZYADHIMSELF1@GMAIL.COM",
                             NormalizedUserName = "USER",
-                            PasswordHash = "AQAAAAIAAYagAAAAECgNTEnulj2L7oHJ6PGUBRSkCY2WRxXip6jPKOtLK0+LaEr9GjPtQjW25gEMiX0+eQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDF7b+BdlpJdxAVGs+yZjrvsht+ZcSIfbXR8rhVrTahyPQwm1sfFkTyNQbX5JvkXpw==",
                             PhoneNumberConfirmed = false,
                             RowVersion = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 },
-                            SecurityStamp = "50259a4d-ecde-48e4-97bd-b6fb932d600c",
+                            SecurityStamp = "19305808-dc7a-49e1-b39f-95ba786f6f8b",
                             TwoFactorEnabled = false,
                             UserName = "user"
                         });
@@ -161,8 +164,9 @@ namespace Infrastructure.Migrations
                     b.Property<string>("RevokeReason")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Token");
 

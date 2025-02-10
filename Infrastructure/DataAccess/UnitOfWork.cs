@@ -12,6 +12,7 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     private readonly UserManager<AppUser> _userManager;
     private readonly RoleManager<IdentityRole<int>> _roleManager;
     public IUserRepository UserRepository { get; }
+    public IRefreshTokenRepository RefreshTokenRepository { get; }
 
 
     public UnitOfWork(AppDbContext context,
@@ -21,6 +22,7 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         _context = context;
         _userManager = userManager;
         _roleManager = roleManager;
+        RefreshTokenRepository = new RefreshTokensRepository(context);
         UserRepository = new UserRepository(context);
     }
 
