@@ -131,7 +131,8 @@ public class AuthService(
         token.IsRevoked = true;
         token.RevokeReason = revokeReason;
         await unitOfWork.RefreshTokenRepository.UpdateAsync(token);
-        return await unitOfWork.CommitAsync() < 1;
+        var success = await unitOfWork.CommitAsync() >= 1;
+        return success;
     }
     public async Task<AuthResult> LoginAsync(LoginDto loginDto)
     {
@@ -154,6 +155,24 @@ public class AuthService(
         result.AccessTokenExpiration = expiresAt;
         result.RefreshToken = refreshToken.Token;
         result.RefreshTokenExpiration = expiresAt;
+        return result;
+    }
+
+    public async Task<UserDto> GetUserInfoAsync(int userId)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user == null)
+        {
+            return new UserDto();
+        }
+
+        var result = new UserDto()
+        {
+            UserName = user.UserName,
+            Email = user.Email,
+            ImageUrl = user.ImageUrl,
+            IsVerified = user.EmailConfirmed
+        };
         return result;
     }
     private async Task<List<Claim>> GenerateUserClaimsAsync(AppUser user)
