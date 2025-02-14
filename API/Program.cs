@@ -54,15 +54,15 @@ public class Program
         });
         app.MapScalarApiReference(options =>
         {
-            options.WithTitle("Ctrl+P")
+            options.WithLayout(ScalarLayout.Classic);
+            options.WithTitle("Creatsy_API")
                 .WithTheme(ScalarTheme.DeepSpace).WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
         });
         app.UseStaticFiles();
         app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseAuthorization();
-
-
+        
         app.MapControllers();
 
         app.Run();

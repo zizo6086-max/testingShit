@@ -27,6 +27,21 @@ public class AuthController(AuthService authService,ILogger<AuthController> logg
         return Ok(result);
     }
 
+    [HttpPost("RegisterAdmin")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> RegisterAdmin([FromBody] RegisterDto registerDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        var result = await authService.RegisterAsync(registerDto,"Admin");
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+        return Ok(result);
+    }
     [HttpPost("LoginUser")]
     [AllowAnonymous]
     public async Task<IActionResult> LoginUser([FromBody] LoginDto loginDto)
@@ -44,6 +59,7 @@ public class AuthController(AuthService authService,ILogger<AuthController> logg
     }
 
     [HttpPost("RevokeToken")]
+    [Authorize]
     public async Task<IActionResult> RevokeToken(string refreshToken)
     {
         try
@@ -66,6 +82,7 @@ public class AuthController(AuthService authService,ILogger<AuthController> logg
         }
     }
     [HttpPost("RefreshToken")]
+    [AllowAnonymous]
     public async Task<IActionResult> RefreshToken(string refreshToken)
     {
         try
