@@ -60,10 +60,11 @@ public class Program
         });
         app.UseStaticFiles();
         app.UseHttpsRedirection();
+        app.UseCors("AllowAll");
         app.UseAuthentication();
         app.UseAuthorization();
-        
-        app.MapControllers();
+
+        app.MapControllers().RequireCors("AllowAll");
 
         app.Run();
     }
