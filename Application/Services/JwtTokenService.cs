@@ -15,28 +15,25 @@ public class JwtTokenService(
     ILogger<JwtTokenService> logger,
     IUnitOfWork unitOfWork)
 {
-    private readonly IConfiguration _configuration = configuration;
-    private readonly TokenValidationParameters _tokenValidationParameters = tokenValidationParameters;
-    private readonly ILogger<JwtTokenService> _logger = logger;
 
     public async Task<(string token, DateTime expirationDate)> GenerateJwtTokenAsync(IEnumerable<Claim> claims)
     {
         try
         {
-            var secretKey = _configuration["Jwt:SecretKey"] ??
+            var secretKey = configuration["Jwt:SecretKey"] ??
                             throw new ApplicationException("JWT Secret Key is not configured");
-            var issuer = _configuration["Jwt:ValidIssuer"] ??
+            var issuer = configuration["Jwt:ValidIssuer"] ??
                          throw new ApplicationException("JWT Issuer is not configured");
-            var audience = _configuration["Jwt:ValidAudience"] ??
+            var audience = configuration["Jwt:ValidAudience"] ??
                            throw new ApplicationException("JWT Audience is not configured");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var claimsList = claims.ToList();
             var roleClaim = claimsList.FirstOrDefault(x => x.Type == ClaimTypes.Role)?.Value;
             var expiryMinutes = roleClaim switch
             {
-                "Admin" => int.Parse(_configuration["Jwt:AdminExpiryMinutes"]!),
-                "User" => int.Parse(_configuration["Jwt:UserExpiryMinutes"]!),
-                _ => int.Parse(_configuration["Jwt:UserExpiryMinutes"]!)
+                "Admin" => int.Parse(configuration["Jwt:AdminExpiryMinutes"]!),
+                "User" => int.Parse(configuration["Jwt:UserExpiryMinutes"]!),
+                _ => int.Parse(configuration["Jwt:UserExpiryMinutes"]!)
             };
             var expiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
             var fullClaims = AddStandardClaims(claimsList);
@@ -51,7 +48,7 @@ public class JwtTokenService(
             };
             var tokenHandler = new JsonWebTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            if (!(await tokenHandler.ValidateTokenAsync(token, _tokenValidationParameters)).IsValid)
+            if (!(await tokenHandler.ValidateTokenAsync(token, tokenValidationParameters)).IsValid)
             {
                 throw new SecurityTokenValidationException("Generated jwt Failed Validation!");
             }
@@ -60,7 +57,7 @@ public class JwtTokenService(
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to generate JWT Token");
+            logger.LogError(e, "Failed to generate JWT Token");
             throw;
         }
     }

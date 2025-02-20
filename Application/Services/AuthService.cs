@@ -84,35 +84,53 @@ public class AuthService(
 
     public async Task<AuthResult> RefreshTokenAsync(string refreshToken)
     {
-        var token = await unitOfWork.RefreshTokenRepository.GetAsync(t=> t.Token == refreshToken);
-        if (token == null)
+        try
         {
-            throw new SecurityTokenException("Invalid Refresh Token");
-        }
+            var token = await unitOfWork.RefreshTokenRepository.GetAsync(t => t.Token == refreshToken);
+            if (token == null)
+            {
+                throw new SecurityTokenException("Invalid Refresh Token");
+            }
 
-        if (!token.IsActive)
-        {
-            throw new SecurityTokenException("Deactivated Refresh Token");
-        }
-        await RevokeTokenAsync(refreshToken,"Replaced by a new refresh token"); 
-        var user = await userManager.FindByIdAsync(token.UserId.ToString());
-        if (user == null)
-        {
-            throw new SecurityTokenException("User is not found");
-        }
+            if (!token.IsActive)
+            {
+                throw new SecurityTokenException("Deactivated Refresh Token");
+            }
 
-        var newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(user.Id);
-        var claims = await GenerateUserClaimsAsync(user);
-        var (accessToken, expiresAt) = await jwtTokenService.GenerateJwtTokenAsync(claims);
-        return new AuthResult()
+            await RevokeTokenAsync(refreshToken, "Replaced by a new refresh token");
+            var user = await userManager.FindByIdAsync(token.UserId.ToString());
+            if (user == null)
+            {
+                throw new SecurityTokenException("User is not found");
+            }
+
+            var newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(user.Id);
+            var claims = await GenerateUserClaimsAsync(user);
+            var (accessToken, expiresAt) = await jwtTokenService.GenerateJwtTokenAsync(claims);
+            return new AuthResult()
+            {
+                Success = true,
+                Message = "Successfully Refreshed Token",
+                AccessToken = accessToken,
+                RefreshToken = newRefreshToken.Token,
+                AccessTokenExpiration = expiresAt,
+                RefreshTokenExpiration = newRefreshToken.ExpiresAt,
+            };
+        }
+        catch (ApplicationException ex)
         {
-            Success = true,
-            Message = "Successfully Refreshed Token",
-            AccessToken = accessToken,
-            RefreshToken = newRefreshToken.Token,
-            AccessTokenExpiration = expiresAt,
-            RefreshTokenExpiration = newRefreshToken.ExpiresAt,
-        };
+            return new AuthResult()
+            {
+                Message = ex.Message
+            };
+        }
+        catch (SecurityTokenException ex)
+        {
+            return new AuthResult()
+            {
+                Message = ex.Message
+            };
+        }
     }
 
     public async Task<bool> RevokeTokenAsync(string refreshToken, string? revokeReason = null)
@@ -136,26 +154,44 @@ public class AuthService(
     }
     public async Task<AuthResult> LoginAsync(LoginDto loginDto)
     {
-        AppUser? user;
-        AuthResult result = new AuthResult();
-        if (loginDto.EmailOrUsername.Contains('@'))
-            user = await userManager.FindByEmailAsync(loginDto.EmailOrUsername);
-        else
-            user = await userManager.FindByNameAsync(loginDto.EmailOrUsername);
-        if (user == null || !(await userManager.CheckPasswordAsync(user, loginDto.Password)))
+        try
         {
-            result.Message = "Invalid Credentials!";
+            AppUser? user;
+            var result = new AuthResult();
+            if (loginDto.EmailOrUsername.Contains('@'))
+                user = await userManager.FindByEmailAsync(loginDto.EmailOrUsername);
+            else
+                user = await userManager.FindByNameAsync(loginDto.EmailOrUsername);
+            if (user == null || !(await userManager.CheckPasswordAsync(user, loginDto.Password)))
+            {
+                result.Message = "Invalid Credentials!";
+                return result;
+            }
+
+            var claims = await GenerateUserClaimsAsync(user);
+            var (accessToken, expiresAt) = await jwtTokenService.GenerateJwtTokenAsync(claims);
+            var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(user.Id);
+            result.Success = true;
+            result.AccessToken = accessToken;
+            result.AccessTokenExpiration = expiresAt;
+            result.RefreshToken = refreshToken.Token;
+            result.RefreshTokenExpiration = expiresAt;
             return result;
         }
-        var claims = await GenerateUserClaimsAsync(user);
-        var (accessToken, expiresAt) = await jwtTokenService.GenerateJwtTokenAsync(claims);
-        var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(user.Id);
-        result.Success = true;
-        result.AccessToken = accessToken;
-        result.AccessTokenExpiration = expiresAt;
-        result.RefreshToken = refreshToken.Token;
-        result.RefreshTokenExpiration = expiresAt;
-        return result;
+        catch (ApplicationException ex)
+        {
+            return new AuthResult()
+            {
+                Message = ex.Message
+            };
+        }
+        catch (SecurityTokenException ex)
+        {
+            return new AuthResult()
+            {
+                Message = ex.Message
+            };
+        }
     }
 
     public async Task<UserDto> GetUserInfoAsync(int userId)
