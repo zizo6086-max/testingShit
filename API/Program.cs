@@ -54,8 +54,8 @@ public class Program
         });
         app.MapScalarApiReference(options =>
         {
-            options.WithLayout(ScalarLayout.Classic);
-            options.WithTitle("Creatsy_API")
+            options.WithLayout(ScalarLayout.Modern);
+            options.WithTitle("New_Project")
                 .WithTheme(ScalarTheme.DeepSpace).WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
         });
         app.UseStaticFiles();

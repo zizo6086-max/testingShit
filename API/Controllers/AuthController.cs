@@ -58,13 +58,13 @@ public class AuthController(AuthService authService,ILogger<AuthController> logg
         return Ok(result);
     }
 
-    [HttpPost("RevokeToken")]
+    [HttpPost("Logout")]
     [Authorize]
     public async Task<IActionResult> RevokeToken(string refreshToken)
     {
         try
         {
-            var success = await authService.RevokeTokenAsync(refreshToken, "Mazas Ozzy");
+            var success = await authService.RevokeTokenAsync(refreshToken, "Mazag Ozzy");
             if (success)
             {
                 return Ok();
@@ -101,12 +101,5 @@ public class AuthController(AuthService authService,ILogger<AuthController> logg
         }
     }
 
-    [HttpGet("Me")]
-    [Authorize]
-    public async Task<IActionResult> GetMe()
-    {
-        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
-        var result = await authService.GetUserInfoAsync(userId);
-        return Ok(result);
-    }
+
 }

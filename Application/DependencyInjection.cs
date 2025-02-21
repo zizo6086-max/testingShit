@@ -1,4 +1,5 @@
-﻿using Application.Services;
+﻿using Application.DTOs;
+using Application.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +11,9 @@ public static class DependencyInjection
     {
         services.AddScoped<AuthService>();
         services.AddScoped<JwtTokenService>();
+        services.Configure<PhotoOptions>(configuration.GetSection("PhotoOptions"));
+        services.AddScoped<PhotoService>();
+        services.AddScoped<UserService>();
         return services;
     }
 
