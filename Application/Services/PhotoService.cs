@@ -30,189 +30,116 @@ public class PhotoService
         _options = options.Value;
         _uploadSemaphore = new SemaphoreSlim(_options.MaxConcurrentUploads);
     }
-
-    /// <summary>
-    /// Saves multiple photos to the specified directory
+        /// <summary>
+    /// Uploads a list of files to the specified directory and returns URLs for database storage
     /// </summary>
-    /// <param name="files">Collection of files to upload</param>
-    /// <param name="directoryName">Target directory for uploads</param>
-    /// <returns>Tuple containing list of file URLs and any errors encountered</returns>
-    public async Task<(List<string> FileUrls, List<string> Errors)> SavePhotosAsync(
-        IEnumerable<IFormFile> files,
-        string directoryName)
+    /// <param name="files">List of files to upload</param>
+    /// <param name="directoryName">Name of the directory to store files in</param>
+    /// <returns>List of URLs for the uploaded files</returns>
+    public async Task<List<string>> UploadFilesAsync(IEnumerable<IFormFile> files, string directoryName)
     {
-        var fileUrls = new List<string>();
-        var errors = new List<string>();
-
-        try
+        if (!files.Any())
         {
-            // Validate input parameters
-            var formFiles = files.ToList();
-            await ValidateInputsAsync(formFiles, directoryName);
-
-            // Get or create upload directory
-            var uploadDirectory = GetUploadDirectory(directoryName);
-            
-            // Process each file upload concurrently
-            var uploadTasks = formFiles.Select(file => ProcessFileUploadAsync(file, uploadDirectory, fileUrls, errors));
-            await Task.WhenAll(uploadTasks);
-        }
-        catch (ValidationException ex)
-        {
-            _logger.LogWarning(ex, "Validation failed for file upload");
-            errors.Add(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unexpected error in SavePhotosAsync");
-            errors.Add("An unexpected server error occurred. Please try again later.");
+            _logger.LogWarning("No files provided for upload to directory: {DirectoryName}", directoryName);
+            return [];
         }
 
-        return (fileUrls, errors);
-    }
-    
-    public async Task<bool> DeletePhotoAsync(string fileUrl)
-    {
-        try
-        {
-            // Convert URL to physical file path
-            var filePath = Path.Combine(_webHostEnvironment.WebRootPath, fileUrl.TrimStart('/'));
-            
-            if (!File.Exists(filePath))
-            {
-                _logger.LogWarning("Attempted to delete non-existent file: {FileUrl}", fileUrl);
-                return false;
-            }
-            
-            await Task.Run(() => File.Delete(filePath));
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting file: {FileUrl}", fileUrl);
-            return false;
-        }
-    }
-
-
-    private async Task ValidateInputsAsync(IEnumerable<IFormFile> files, string directoryName)
-    {
-        var formFiles = files.ToList();
-        if (files == null || formFiles.Count == 0)
-            throw new ValidationException("No files provided.");
-
-        if (string.IsNullOrWhiteSpace(directoryName))
-            throw new ValidationException("Directory name cannot be empty.");
-
-        if (formFiles.Count > _options.MaxConcurrentUploads)
-            throw new ValidationException($"Maximum number of files exceeded. Limit is {_options.MaxConcurrentUploads}.");
-
-        await ValidateDirectoryPathAsync(directoryName);
-    }
-    
-    private string GetUploadDirectory(string directoryName)
-    {
-        var uploadDirectory = Path.Combine(_webHostEnvironment.WebRootPath, _options.BaseUploadPath, directoryName);
-        
-        if (!Directory.Exists(uploadDirectory))
-        {
-            Directory.CreateDirectory(uploadDirectory);
-        }
-
-        return uploadDirectory;
-    }
-    
-    private async Task ProcessFileUploadAsync(
-        IFormFile file,
-        string uploadDirectory,
-        List<string> fileUrls,
-        List<string> errors)
-    {
         try
         {
             await _uploadSemaphore.WaitAsync();
-            if (!ValidateFile(file, out var validationError))
+            
+            var urls = new List<string>();
+            var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", directoryName);
+            
+            // Ensure directory exists
+            if (!Directory.Exists(uploadPath))
             {
-                errors.Add(validationError);
-                return;
+                Directory.CreateDirectory(uploadPath);
+                _logger.LogInformation("Created directory: {DirectoryPath}", uploadPath);
             }
 
-            var (fileName, filePath) = GenerateUniqueFilePath(file, uploadDirectory);
-            await SaveFileAsync(file, filePath);
-            var fileUrl = $"/{_options.BaseUploadPath}/{fileName}";
-            lock (fileUrls)
+            foreach (var file in files)
             {
-                fileUrls.Add(fileUrl);
+                if (file.Length > 0)
+                {
+                    // Generate a unique filename to prevent overwriting
+                    var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+                    var filePath = Path.Combine(uploadPath, fileName);
+                    
+                    // Save the file
+                    await using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+                    
+                    // Generate URL for the file (relative to web root)
+                    var fileUrl = $"/uploads/{directoryName}/{fileName}";
+                    urls.Add(fileUrl);
+                    
+                    _logger.LogInformation("File uploaded successfully: {FileName} to {FilePath}", fileName, filePath);
+                }
+                else
+                {
+                    _logger.LogWarning("Skipped empty file: {FileName}", file.FileName);
+                }
             }
+            
+            return urls;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing file: {FileName}", file.FileName);
-            lock (errors)
-            {
-                errors.Add($"Failed to process {file.FileName}: {ex.Message}");
-            }
+            _logger.LogError(ex, "Error uploading files to directory: {DirectoryName}", directoryName);
+            throw;
         }
         finally
         {
             _uploadSemaphore.Release();
         }
     }
+    public async Task<bool> DeletePhotoAsync(string fileUrl)
+    {
+        if (string.IsNullOrWhiteSpace(fileUrl))
+        {
+            _logger.LogWarning("No file URL provided for deletion");
+            return false;
+        }
     
-    private bool ValidateFile(IFormFile file, out string error)
-    {
-        if (file.Length == 0)
+        try
         {
-            error = $"File {file.FileName} is empty.";
+            // Extract the relative path from the URL
+            var relativePath = fileUrl.TrimStart('/');
+            var filePath = Path.Combine(_webHostEnvironment.WebRootPath, relativePath);
+        
+            if (File.Exists(filePath))
+            {
+                // Use asynchronous file operations
+                await Task.Run(() => File.Delete(filePath));
+                _logger.LogInformation("File deleted successfully: {FilePath}", filePath);
+            
+                // Check if directory is empty and delete if needed
+                var directoryPath = Path.GetDirectoryName(filePath);
+                if (Directory.Exists(directoryPath))
+                {
+                    var hasFiles = await Task.Run(() => Directory.EnumerateFileSystemEntries(directoryPath).Any());
+                    if (!hasFiles)
+                    {
+                        await Task.Run(() => Directory.Delete(directoryPath));
+                        _logger.LogInformation("Empty directory deleted: {DirectoryPath}", directoryPath);
+                    }
+                }
+            
+                return true;
+            }
+            else
+            {
+                _logger.LogWarning("File not found for deletion: {FilePath}", filePath);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting file: {FileUrl}", fileUrl);
             return false;
         }
-
-        var fileExtension = Path.GetExtension(file.FileName).ToLower();
-        if (!_options.AllowedFileFormats.Contains(fileExtension))
-        {
-            error = $"File {file.FileName} has an invalid format. Allowed formats: {string.Join(", ", _options.AllowedFileFormats)}";
-            return false;
-        }
-
-        if (file.Length > _options.MaxFileSize)
-        {
-            error = $"File {file.FileName} exceeds the maximum allowed size of {_options.MaxFileSize / (1024 * 1024)} MB.";
-            return false;
-        }
-
-        error = string.Empty;
-        return true;
-    }
-
-    private static (string fileName, string filePath) GenerateUniqueFilePath(
-        IFormFile file,
-        string uploadDirectory)
-    {
-        var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
-        var filePath = Path.Combine(uploadDirectory, fileName);
-        return (fileName, filePath);
-    }
-
-    private static async Task SaveFileAsync(IFormFile file, string filePath)
-    {
-        await using var stream = new FileStream(filePath, FileMode.Create);
-        await file.CopyToAsync(stream);
-    }
-    
-    private async Task ValidateDirectoryPathAsync(string directoryName)
-    {
-        // Prevent directory traversal attacks
-        if (directoryName.Contains(".."))
-            throw new ValidationException("Invalid directory path.");
-
-        var fullPath = Path.Combine(_webHostEnvironment.WebRootPath, _options.BaseUploadPath, directoryName);
-        var fullPathInfo = new DirectoryInfo(fullPath);
-        var webRootInfo = new DirectoryInfo(_webHostEnvironment.WebRootPath);
-
-        // Ensure the target directory is under webroot for security
-        if (!fullPathInfo.FullName.StartsWith(webRootInfo.FullName))
-            throw new ValidationException("Invalid directory path.");
-
-        await Task.CompletedTask;
     }
 }

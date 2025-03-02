@@ -45,32 +45,23 @@ public class UserService(UserManager<AppUser> userManager,
                 await photoService.DeletePhotoAsync(user.ImageUrl);
             }
 
-            var (fileUrls, errors) = await photoService.SavePhotosAsync(new[] { file }, "Users");
-            if (errors.Count > 0)
-            {
-                return new Result()
-                {
-                    Message = string.Join('\n', errors)
-                };
-            }
+            var fileUrls = await photoService.UploadFilesAsync(new[] { file }, "Users");
 
             user.ImageUrl = fileUrls[0];
             var updateResult = await userManager.UpdateAsync(user);
-            if (!updateResult.Succeeded)
-            {
-                await photoService.DeletePhotoAsync(user.ImageUrl);
+            if (updateResult.Succeeded)
                 return new Result()
                 {
-                    Message = "User could not be updated"
+                    Success = true,
+                    Message = "User Image updated",
+                    Data = user.ImageUrl
                 };
-            }
-
+            await photoService.DeletePhotoAsync(user.ImageUrl);
             return new Result()
             {
-                Success = true,
-                Message = "User Image updated",
-                Data = user.ImageUrl
+                Message = "User could not be updated"
             };
+
         }
         catch (Exception e)
         {
