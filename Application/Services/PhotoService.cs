@@ -38,7 +38,8 @@ public class PhotoService
     /// <returns>List of URLs for the uploaded files</returns>
     public async Task<List<string>> UploadFilesAsync(IEnumerable<IFormFile> files, string directoryName)
     {
-        if (!files.Any())
+        var formFiles = files.ToList();
+        if (formFiles.Count == 0)
         {
             _logger.LogWarning("No files provided for upload to directory: {DirectoryName}", directoryName);
             return [];
@@ -58,7 +59,7 @@ public class PhotoService
                 _logger.LogInformation("Created directory: {DirectoryPath}", uploadPath);
             }
 
-            foreach (var file in files)
+            foreach (var file in formFiles)
             {
                 if (file.Length > 0)
                 {
@@ -118,23 +119,18 @@ public class PhotoService
             
                 // Check if directory is empty and delete if needed
                 var directoryPath = Path.GetDirectoryName(filePath);
-                if (Directory.Exists(directoryPath))
-                {
-                    var hasFiles = await Task.Run(() => Directory.EnumerateFileSystemEntries(directoryPath).Any());
-                    if (!hasFiles)
-                    {
-                        await Task.Run(() => Directory.Delete(directoryPath));
-                        _logger.LogInformation("Empty directory deleted: {DirectoryPath}", directoryPath);
-                    }
-                }
-            
+                if (!Directory.Exists(directoryPath))
+                    return true;
+                var hasFiles = await Task.Run(() => Directory.EnumerateFileSystemEntries(directoryPath).Any());
+                if (hasFiles)
+                    return true;
+                await Task.Run(() => Directory.Delete(directoryPath));
+                _logger.LogInformation("Empty directory deleted: {DirectoryPath}", directoryPath);
+
                 return true;
             }
-            else
-            {
-                _logger.LogWarning("File not found for deletion: {FilePath}", filePath);
-                return false;
-            }
+            _logger.LogWarning("File not found for deletion: {FilePath}", filePath);
+            return false;
         }
         catch (Exception ex)
         {
