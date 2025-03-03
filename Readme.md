@@ -132,22 +132,22 @@ API_Template/
 
 1. **Register**: Create a new user account
    ```http
-   POST /api/auth/register
+   POST /api/auth/RegisterUser
    ```
 
 2. **Login**: Authenticate and receive JWT token
    ```http
-   POST /api/auth/login
+   POST /api/auth/loginUser
    ```
 
 3. **Refresh Token**: Get a new JWT using refresh token
    ```http
-   POST /api/auth/refresh
+   POST /api/auth/RefreshToken
    ```
 
 4. **Change Password**: Update user password
    ```http
-   POST /api/auth/changepassword
+   POST /api/auth/Logout
    ```
 
 ## 🛠️ Customization
