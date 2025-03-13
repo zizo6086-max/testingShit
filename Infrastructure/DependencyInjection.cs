@@ -1,12 +1,14 @@
 ﻿using System.Text;
 using Domain.Models;
 using Infrastructure.DataAccess;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+
 
 namespace Infrastructure;
 
@@ -16,7 +18,7 @@ public static class DependencyInjection
     {
         
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(configuration.GetConnectionString("ProductionDatabase")));
         
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
@@ -43,6 +45,15 @@ public static class DependencyInjection
                     IssuerSigningKey =
                         new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"]!))
                 };
+            })
+            .AddGoogle(options =>
+            {
+                options.ClientId = configuration["Authentication:Google:ClientId"] ?? 
+                    throw new ApplicationException("Google ClientId is missing");
+                options.ClientSecret = configuration["Authentication:Google:ClientSecret"] ?? 
+                    throw new ApplicationException("Google ClientSecret is missing");
+                options.CallbackPath = configuration["Authentication:Google:CallbackPath"] ?? "/signin-google";
+                options.SaveTokens = true;
             });
         return services;
     }
