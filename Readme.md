@@ -18,6 +18,7 @@ YO. THIS IS A FREAKIN’ **ASP.NET Core Web API Template**. It’s got layers. I
   - Role-based nonsense (Admin vs Peasant)
   - Registration & login because DUH
   - Change password so you can regret your choices
+  - Google Authentication for the cool kids 🔍
 
 - **📂 File Management**
   - Upload stuff 📤
@@ -109,11 +110,15 @@ API_Template/
    ```http
    POST /api/auth/loginUser
    ```
-3. **Refresh Token** – Because tokens expire like milk 🥛
+3. **Google Login** – Let the big G vouch for you 🌐
+   ```http
+   GET /api/googleauth/login
+   ```
+4. **Refresh Token** – Because tokens expire like milk 🥛
    ```http
    POST /api/auth/RefreshToken
    ```
-4. **Change Password** – When you forget your dog's birthday
+5. **Change Password** – When you forget your dog's birthday
    ```http
    POST /api/auth/Logout
    ```
