@@ -62,6 +62,7 @@ public class AuthService(
                 transaction.Rollback();
                 result.Success = false;
                 result.Message = "Failed to create new user!";
+                return result;
             }
 
             if (!(await userManager.AddToRoleAsync(newUser, role)).Succeeded)
