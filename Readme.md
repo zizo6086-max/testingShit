@@ -1,180 +1,159 @@
-﻿# API Template
+# 💀 API TEMPLATE (BUT CHAOTIC) 💀
 
-A comprehensive, multi-layered ASP.NET Core Web API template with built-in JWT authentication, user management, and file handling capabilities.
+YO. THIS IS A FREAKIN’ **ASP.NET Core Web API Template**. It’s got layers. It’s got JWT auth. It’s got **file handling**. Basically, it’s BUILT DIFFERENT. 🚀
 
-## 🏗️ Architecture
+---
+## 🏗️ ARCHITECTURE (BECAUSE ORGANIZATION MATTERS, OK?)
 
-This template follows a clean, layered architecture consisting of:
+- **API Layer** – HTTP requests go brrrr 💨
+- **Application Layer** – Business logic happens here, nerd
+- **Domain Layer** – The pure, untouchable core entities
+- **Infrastructure Layer** – Where the database magic lives
 
-- **API Layer**: Entry point for HTTP requests, controllers, and API configurations
-- **Application Layer**: Business logic, DTOs, and services
-- **Domain Layer**: Core business entities and models
-- **Infrastructure Layer**: Data access, repository implementations, and external service integrations
+---
+## ✨ FEATURES (A.K.A. WHY THIS SLAPS)
 
-## ✨ Features
+- **🔥 Authentication & Authorization 🔥**
+  - JWTs with refresh token sorcery 🪄
+  - Role-based nonsense (Admin vs Peasant)
+  - Registration & login because DUH
+  - Change password so you can regret your choices
 
-- **Authentication & Authorization**
-    - JWT authentication with refresh token support
-    - Role-based authorization (User/Admin)
-    - User registration and login flows
-    - Password change functionality
+- **📂 File Management**
+  - Upload stuff 📤
+  - Image storage 📸
+  - Configurable like your coffee ☕
 
-- **File Management**
-    - File upload and storage service
-    - Support for photo/image storage
-    - Configurable file options
+- **🛢️ Data Access**
+  - Entity Framework Core (EF Core) because raw SQL is pain
+  - Repositories for that clean, crisp data handling ✨
+  - Unit of Work because transactions exist
+  - Migrations because "Works on my machine" isn't good enough
 
-- **Data Access**
-    - Entity Framework Core implementation
-    - Repository pattern
-    - Unit of Work pattern for transaction management
-    - Database migrations
+- **🛠️ API Configuration**
+  - DI setup because manual dependency management is suffering
+  - OpenAPI/Swagger docs so people actually use this
+  - Environment-specific configs (yes, PROD and DEV are different)
 
-- **API Configuration**
-    - Dependency injection setup
-    - Scalar/OpenAPI documentation
-    - Environment-specific configurations
+---
+## 🚀 GETTING STARTED (NOOB GUIDE)
 
-## 🚀 Getting Started
+### Prerequisites:
+- .NET 6.0+ (stay up to date, kids)
+- SQL Server (or something compatible, we don’t judge)
+- Visual Studio 2022 or VS Code (pick your poison)
 
-### Prerequisites
-
-- .NET 6.0+ SDK
-- SQL Server (or another compatible database)
-- Visual Studio 2022 or Visual Studio Code
-
-### Installation
-
-1. Clone the repository
-   ```
+### Installation (FOLLOW THE STEPS OR SUFFER):
+1. **Clone it.**
+   ```sh
    git clone https://github.com/Ozzy-ZY/api-template.git
    ```
-
-2. Navigate to the project directory
-   ```
+2. **Enter the void.**
+   ```sh
    cd api-template
    ```
-
-3. Update the connection string in `appsettings.json` or `appsettings.Development.json`
+3. **Configure your secrets (aka database connection).**
    ```json
    "ConnectionStrings": {
      "DefaultConnection": "Server=YOUR_SERVER;Database=YOUR_DB;Trusted_Connection=True;MultipleActiveResultSets=true"
    }
    ```
-
-4. Run database migrations
-   ```
+4. **Summon the database.**
+   ```sh
    dotnet ef database update
    ```
-
-5. Run the application
-   ```
+5. **Summon the API overlords.**
+   ```sh
    dotnet run --project API
    ```
+6. **Swagger lives here →** `https://localhost:7282/Scalar/v1`
 
-6. Access the Scalar UI at `https://localhost:7282/Scalar/v1`
-
-## 📁 Project Structure
+---
+## 📁 PROJECT STRUCTURE (A.K.A. THE BLUEPRINTS)
 
 ```
 API_Template/
 ├── API/
-│   ├── Controllers/
-│   │   ├── AuthController.cs
-│   │   ├── TestController.cs
-│   │   └── UserController.cs
+│   ├── Controllers/ (Here be endpoints 🛑)
+│   │   ├── AuthController.cs (Login, Register, etc.)
+│   │   ├── TestController.cs (Just vibes 🤷‍♂️)
+│   │   └── UserController.cs (User stuff 👤)
 │   ├── wwwroot/
-│   │   └── uploads/
-│   │       └── Users/
-│   ├── appsettings.json
-│   └── Program.cs
-│   
-│   
+│   │   └── uploads/ (Where your cursed files go)
+│   ├── appsettings.json (Configs, don’t touch if scared)
+│   └── Program.cs (API bootup magic 🏎️)
 │
 ├── Application/
-│   ├── DTOs/
-│   │   ├── AuthResult.cs
-│   │   ├── ChangePasswordDto.cs
-│   │   ├── LoginDto.cs
-│   │   ├── PhotoOptions.cs
-│   │   ├── RegisterDto.cs
-│   │   ├── Result.cs
-│   │   └── UserDto.cs
-│   ├── Services/
-│   │   ├── AuthService.cs
-│   │   ├── JwtTokenService.cs
-│   │   ├── PhotoService.cs
-│   │   └── UserService.cs
-│   └── Validators/
-│       └── DependencyInjection.cs
+│   ├── DTOs/ (Data but with ✨ structure ✨)
+│   ├── Services/ (The real work happens here)
+│   └── Validators/ (STOP BAD INPUTS 🚫)
 │
 ├── Domain/
-│   ├── Models/
-│   │   ├── AppUser.cs
-│   │   └── RefreshToken.cs
-│   └── ModelsConfig/
-│       ├── AppUserConfig.cs
-│       ├── RolesSeeding.cs
-│       └── UserRolesSeeding.cs
+│   ├── Models/ (Entities, aka the data lords)
+│   ├── ModelsConfig/ (Mapping rules because EF Core needs them)
 │
 └── Infrastructure/
     └── DataAccess/
-        ├── Repositories/
-        │   ├── AppDbContext.cs
-        │   ├── AppDbContextFactory.cs
-        │   ├── IUnitOfWork.cs
-        │   └── UnitOfWork.cs
-        └── Migrations/
-            └── DependencyInjection.cs
+        ├── Repositories/ (Data handlers 📦)
+        ├── Migrations/ (DB evolution, survival of the fittest)
 ```
 
-## 🔐 Authentication Flow
+---
+## 🔐 AUTH FLOW (FOR THOSE WHO LIKE SECURITY)
 
-1. **Register**: Create a new user account
+1. **Register** – Sign up (yay, new user!)
    ```http
-   POST /api/auth/register
+   POST /api/auth/RegisterUser
+   ```
+2. **Login** – Get a token, prove you're cool
+   ```http
+   POST /api/auth/loginUser
+   ```
+3. **Refresh Token** – Because tokens expire like milk 🥛
+   ```http
+   POST /api/auth/RefreshToken
+   ```
+4. **Change Password** – When you forget your dog's birthday
+   ```http
+   POST /api/auth/Logout
    ```
 
-2. **Login**: Authenticate and receive JWT token
-   ```http
-   POST /api/auth/login
+---
+## 🛠️ CUSTOMIZATION (BECOME A CODE WIZARD)
+
+### Adding a Controller:
+1. Make a new `.cs` file in `API/Controllers`
+2. Inherit `ControllerBase`
+3. Add `[Route]`, `[HttpGet]`, etc.
+4. Deploy. Dominate. 🚀
+
+### Adding a Model:
+1. Create it in `Domain/Models/`
+2. Config it in `Domain/ModelsConfig/`
+3. Add it to `AppDbContext`
+4. Migrate (`dotnet ef migrations add SomethingCool`)
+
+---
+## 📄 LICENSE (IT'S MIT, DO WHATEVER, JUST DON’T SUE ME)
+
+## 🤝 CONTRIBUTING (WE WANT YOUR CODE)
+
+1. **Fork it.** 📌
+2. **Make a branch.** 🌿
+   ```sh
+   git checkout -b feature/amazing-feature
    ```
-
-3. **Refresh Token**: Get a new JWT using refresh token
-   ```http
-   POST /api/auth/refresh
+3. **Commit your masterpiece.** 🎨
+   ```sh
+   git commit -m "Add some amazing feature"
    ```
-
-4. **Change Password**: Update user password
-   ```http
-   POST /api/auth/changepassword
+4. **Push it real good.** 🚀
+   ```sh
+   git push origin feature/amazing-feature
    ```
+5. **Open a Pull Request.** 🛠️
 
-## 🛠️ Customization
+---
 
-### Adding New Controllers
+🔥 **Made with caffeine, sleepless nights, and questionable decisions.** 🔥
 
-1. Create a new controller class in the `API/Controllers` directory
-2. Inherit from `ControllerBase` and add appropriate route attributes
-3. Implement required endpoint methods
-
-### Adding New Models
-
-1. Define entity classes in the `Domain/Models` directory
-2. Create configuration classes in the `Domain/ModelsConfig` directory
-3. Register entities in the `AppDbContext`
-4. Generate and apply migrations
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
