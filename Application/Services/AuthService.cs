@@ -19,14 +19,19 @@ public class AuthService(
 
     private async Task<Result> CheckExistence(RegisterDto registerDto)
     {
-        var userExists = await userManager.FindByNameAsync(registerDto.Username);
+        return await CheckExistence(registerDto.Username, registerDto.Email);
+    }
+    
+    private async Task<Result> CheckExistence(string username, string email)
+    {
+        var userExists = await userManager.FindByNameAsync(username);
         var result = new Result();
         if (userExists != null)
         {
             result.Message = "Username already exists!";
             return result;
         }
-        userExists = await userManager.FindByEmailAsync(registerDto.Email);
+        userExists = await userManager.FindByEmailAsync(email);
         if (userExists != null)
         {
             result.Message = "Email already exists!";
@@ -211,6 +216,140 @@ public class AuthService(
         };
         return result;
     }
+    
+    public async Task<AuthResult> LoginWithExternalProviderAsync(int userId)
+    {
+        try
+        {
+            var user = await userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+            {
+                return new AuthResult { Message = "User not found" };
+            }
+            
+            var claims = await GenerateUserClaimsAsync(user);
+            var (accessToken, expiresAt) = await jwtTokenService.GenerateJwtTokenAsync(claims);
+            
+            // Start a transaction for refresh token generation and storage
+            using var transaction = await unitOfWork.BeginTransactionAsync();
+            try
+            {
+                var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(user.Id);
+                // Store the refresh token in the database
+                transaction.Commit();
+                
+                return new AuthResult
+                {
+                    Success = true,
+                    AccessToken = accessToken,
+                    AccessTokenExpiration = expiresAt,
+                    RefreshToken = refreshToken.Token,
+                    RefreshTokenExpiration = refreshToken.ExpiresAt
+                };
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                return new AuthResult { Message = $"Failed to generate refresh token: {ex.Message}" };
+            }
+        }
+        catch (ApplicationException ex)
+        {
+            return new AuthResult { Message = ex.Message };
+        }
+        catch (SecurityTokenException ex)
+        {
+            return new AuthResult { Message = ex.Message };
+        }
+    }
+    
+    public async Task<AuthResult> HandleGoogleAuthCallbackAsync(string googleId, string email, string name)
+    {
+        if (string.IsNullOrEmpty(googleId) || string.IsNullOrEmpty(email))
+        {
+            return new AuthResult { Message = "Email or Google ID not available" };
+        }
+
+        try
+        {
+            var username = email.Split('@')[0]; // Use part of email as username
+            var user = await userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                var existenceResult = await CheckExistence(username, email);
+                if (!existenceResult.Success && existenceResult.Message == "Username already exists!")
+                {
+                    username = $"{username}{new Random().Next(1000, 9999)}"; // to make it unique
+                }
+                
+                user = new AppUser
+                {
+                    UserName = username,
+                    Email = email,
+                    GoogleId = googleId,
+                    IsExternalAccount = true,
+                    EmailConfirmed = true
+                };
+
+                using var transaction = await unitOfWork.BeginTransactionAsync();
+                try
+                {
+                    var result = await userManager.CreateAsync(user);
+                    if (!result.Succeeded)
+                    {
+                        transaction.Rollback();
+                        return new AuthResult { Message = "Failed to create user from Google account" };
+                    }
+
+                    var roleResult = await userManager.AddToRoleAsync(user, "User");
+                    if (!roleResult.Succeeded)
+                    {
+                        transaction.Rollback();
+                        return new AuthResult { Message = "Failed to assign role to new user" };
+                    }
+                    
+                    await unitOfWork.CommitAsync();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return new AuthResult { Message = ex.Message };
+                }
+            }
+            else if (string.IsNullOrEmpty(user.GoogleId))
+            {
+                user.GoogleId = googleId;
+                user.IsExternalAccount = true;
+                
+                using var transaction = await unitOfWork.BeginTransactionAsync();
+                try
+                {
+                    var updateResult = await userManager.UpdateAsync(user);
+                    if (!updateResult.Succeeded)
+                    {
+                        transaction.Rollback();
+                        return new AuthResult { Message = "Failed to link Google account to existing user" };
+                    }
+                    await unitOfWork.CommitAsync();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return new AuthResult { Message = ex.Message };
+                }
+            }
+
+            return await LoginWithExternalProviderAsync(user.Id);
+        }
+        catch (Exception ex)
+        {
+            return new AuthResult { Message = ex.Message };
+        }
+    }
+    
     private async Task<List<Claim>> GenerateUserClaimsAsync(AppUser user)
     {
         var claims = new List<Claim>
@@ -230,6 +369,12 @@ public class AuthService(
         // Add custom claims
         var userClaims = await userManager.GetClaimsAsync(user);
         claims.AddRange(userClaims);
+        
+        if (user.IsExternalAccount && !string.IsNullOrEmpty(user.GoogleId))
+        {
+            claims.Add(new Claim("ExternalProvider", "Google"));
+            claims.Add(new Claim("GoogleId", user.GoogleId));
+        }
 
         return claims;
     }
