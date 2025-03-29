@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Domain.Models;
 using Infrastructure.DataAccess;
+using Infrastructure.Seeding;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -21,7 +22,7 @@ public static class DependencyInjection
             options.UseSqlServer(configuration.GetConnectionString("ProductionDatabase")));
         
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        
+        services.AddHostedService<DataBaseSeederService>();
         services.AddIdentity<AppUser, IdentityRole<int>>()
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
