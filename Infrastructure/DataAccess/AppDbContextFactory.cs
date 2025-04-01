@@ -9,7 +9,7 @@ public class AppDbContextFactory:IDesignTimeDbContextFactory<AppDbContext>
     public AppDbContext CreateDbContext(string[] args)
     {
         var config = new ConfigurationBuilder()
-            .SetBasePath("C:\\Users\\user\\source\\repos\\Creatsy\\API\\")
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(),"../API"))
             .AddJsonFile("appsettings.json")
             .Build();
 
