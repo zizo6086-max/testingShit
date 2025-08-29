@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using System.Text;
 using Domain.Models;
+using Domain.Models.Auth;
 using Infrastructure.DataAccess;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

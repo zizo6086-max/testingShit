@@ -15,4 +15,12 @@
       </PackageReference>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="ModelsConfig\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="ModelsConfig\AppUserConfig.cs" />
+    </ItemGroup>
+
 </Project>

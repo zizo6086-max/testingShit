@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Domain.Models;
+using Domain.Models.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;

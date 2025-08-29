@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using Domain.Models;
+using Domain.Models.Auth;
 using Infrastructure.DataAccess.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore.Storage;

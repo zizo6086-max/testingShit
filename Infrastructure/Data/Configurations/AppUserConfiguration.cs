@@ -1,11 +1,10 @@
-﻿using Domain.Models;
-using Microsoft.AspNetCore.Identity;
+using Domain.Models.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Domain.ModelsConfig;
+namespace Infrastructure.Data.Configurations;
 
-public class AppUserConfig:IEntityTypeConfiguration<AppUser>
+public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
 {
     public void Configure(EntityTypeBuilder<AppUser> builder)
     {

@@ -1,4 +1,5 @@
 ﻿using Domain.Models;
+using Domain.Models.Auth;
 using Infrastructure.DataAccess;
 using Microsoft.AspNetCore.Identity;
 

@@ -1,4 +1,6 @@
 ﻿using Domain.Models;
+using Domain.Models.Auth;
+using Infrastructure.Data.Configurations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +15,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        builder.ApplyConfigurationsFromAssembly(typeof(AppUser).Assembly);
+        builder.ApplyConfigurationsFromAssembly(typeof(AppUserConfiguration).Assembly);
     }
 }

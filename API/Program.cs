@@ -3,7 +3,7 @@ using Infrastructure;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using Swashbuckle.AspNetCore.Filters;
-
+using API.Extensions;
 
 namespace API;
 
@@ -12,7 +12,7 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        
+
         builder.Services.AddControllers()
             .AddJsonOptions(options =>
             {
@@ -46,8 +46,11 @@ public class Program
         builder.Logging.AddConsole();
 
         var app = builder.Build();
-        // Configure the HTTP request pipeline.
 
+        // Add global exception handling as the first middleware
+        app.UseGlobalExceptionHandling();
+
+        // Configure the HTTP request pipeline.
         app.UseSwagger(options =>
         {
             options.RouteTemplate = "openapi/{documentName}.json";

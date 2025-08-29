@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Domain.Models;
+using Domain.Models.Auth;
 using Infrastructure.DataAccess;
 using Infrastructure.Seeding;
 using Microsoft.AspNetCore.Authentication.Google;

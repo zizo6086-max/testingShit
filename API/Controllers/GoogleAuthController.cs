@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Application.DTOs;
 using Application.Services;
 using Domain.Models;
+using Domain.Models.Auth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;

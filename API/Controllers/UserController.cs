@@ -2,6 +2,7 @@
 using Application.DTOs;
 using Application.Services;
 using Domain.Models;
+using Domain.Models.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
