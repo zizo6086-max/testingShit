@@ -11,7 +11,7 @@ namespace API.Controllers;
 [Route("[controller]")]
 public class UserController(UserService userService, UserManager<AppUser> userManager,PhotoService photoService,ILogger<UserController> logger): ControllerBase
 {
-    [HttpGet("Me")]
+    [HttpGet("me")]
     [Authorize]
     public async Task<IActionResult> GetMe()
     {
@@ -19,7 +19,7 @@ public class UserController(UserService userService, UserManager<AppUser> userMa
         var result = await userService.GetUserInfoAsync(userId);
         return Ok(result);
     }
-    [HttpPut("ChangePassword")]
+    [HttpPut("change-password")]
     [Authorize]
     public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
     {
@@ -32,7 +32,7 @@ public class UserController(UserService userService, UserManager<AppUser> userMa
         return BadRequest(result);
     }
 
-    [HttpPut("UpdateProfilePicture")]
+    [HttpPut("update-profile-picture")]
     [Authorize]
     public async Task<IActionResult> UpdateProfilePicture(IFormFile file)
     {
@@ -45,7 +45,7 @@ public class UserController(UserService userService, UserManager<AppUser> userMa
         return BadRequest(result);
     }
 
-    [HttpDelete("DeleteProfilePicture")]
+    [HttpDelete("delete-profile-picture")]
     [Authorize]
     public async Task<IActionResult> DeleteProfilePicture()
     {

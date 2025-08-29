@@ -55,7 +55,7 @@ public class Program
         app.MapScalarApiReference(options =>
         {
             options.WithLayout(ScalarLayout.Modern);
-            options.WithTitle("New_Project")
+            options.WithTitle("UserZone-api")
                 .WithTheme(ScalarTheme.DeepSpace).WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
         });
         app.UseStaticFiles();

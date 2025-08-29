@@ -11,7 +11,7 @@ namespace API.Controllers;
 [ApiController]
 public class AuthController(AuthService authService,ILogger<AuthController> logger) : ControllerBase
 {
-    [HttpPost("RegisterUser")]
+    [HttpPost("register")]
     [AllowAnonymous]
     public async Task<IActionResult> RegisterUser([FromBody] RegisterDto registerDto)
     {
@@ -26,23 +26,8 @@ public class AuthController(AuthService authService,ILogger<AuthController> logg
         }
         return Ok(result);
     }
-
-    [HttpPost("RegisterAdmin")]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> RegisterAdmin([FromBody] RegisterDto registerDto)
-    {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-        var result = await authService.RegisterAsync(registerDto,"Admin");
-        if (!result.Success)
-        {
-            return BadRequest(result);
-        }
-        return Ok(result);
-    }
-    [HttpPost("LoginUser")]
+    
+    [HttpPost("login")]
     [AllowAnonymous]
     public async Task<IActionResult> LoginUser([FromBody] LoginDto loginDto)
     {
@@ -58,13 +43,13 @@ public class AuthController(AuthService authService,ILogger<AuthController> logg
         return Ok(result);
     }
 
-    [HttpPost("Logout")]
+    [HttpPost("logout")]
     [Authorize]
     public async Task<IActionResult> RevokeToken(string refreshToken)
     {
         try
         {
-            var success = await authService.RevokeTokenAsync(refreshToken, "Mazag Ozzy");
+            var success = await authService.RevokeTokenAsync(refreshToken, "Logged out");
             if (success)
             {
                 return Ok();
@@ -81,7 +66,7 @@ public class AuthController(AuthService authService,ILogger<AuthController> logg
             return StatusCode(500, new {Message = "error occured during Revoke token"});
         }
     }
-    [HttpPost("RefreshToken")]
+    [HttpPost("refresh-token")]
     [AllowAnonymous]
     public async Task<IActionResult> RefreshToken(string refreshToken)
     {
