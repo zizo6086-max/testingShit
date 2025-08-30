@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using FluentEmail.Core;
 
 
 namespace Infrastructure;
@@ -24,7 +25,10 @@ public static class DependencyInjection
         
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddHostedService<DataBaseSeederService>();
-        services.AddIdentity<AppUser, IdentityRole<int>>()
+        services.AddIdentity<AppUser, IdentityRole<int>>(options =>
+            {
+                options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
+            })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
         services.AddAuthentication(options =>
@@ -57,6 +61,12 @@ public static class DependencyInjection
                 options.CallbackPath = configuration["Authentication:Google:CallbackPath"] ?? "/signin-google";
                 options.SaveTokens = true;
             });
+        services.Configure<DataProtectionTokenProviderOptions>(options => // for email confirmation
+        {
+            options.TokenLifespan = TimeSpan.FromHours(24);
+        });
+        services.AddFluentEmail(configuration["Email:SenderEmail"], configuration["Email:SenderName"])
+            .AddSmtpSender(configuration["Email:Host"], configuration.GetValue<int>("Email:Port"));
         return services;
     }
 

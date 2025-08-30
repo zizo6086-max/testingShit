@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.Configure<PhotoOptions>(configuration.GetSection("PhotoOptions"));
         services.AddScoped<PhotoService>();
         services.AddScoped<UserService>();
+        services.AddScoped<EmailService>();
         return services;
     }
 

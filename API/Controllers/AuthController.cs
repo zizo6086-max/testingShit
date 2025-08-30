@@ -9,7 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 namespace API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController(AuthService authService,ILogger<AuthController> logger) : ControllerBase
+public class AuthController(AuthService authService,ILogger<AuthController> logger, EmailService emailService) : ControllerBase
 {
     [HttpPost("register")]
     [AllowAnonymous]
@@ -86,5 +86,26 @@ public class AuthController(AuthService authService,ILogger<AuthController> logg
         }
     }
 
+    [HttpGet("verify-email")]
+    public async Task<IActionResult> VerifyEmail([FromQuery] string userId, [FromQuery] string token)
+    {
+        var result = await emailService.VerifyEmailAsync(userId, token);
+        if (result.Success)
+        {
+            return Redirect("https://uzer-zone.vercel.app/");
+        }
+        return BadRequest(result);
+    }
+
+    [HttpPost("resend-verification")]
+    public async Task<IActionResult> ResendVerification([FromBody] EmailVerificationRequest model)
+    {
+        var result = await emailService.SendEmailVerificationAsync(model); 
+        if(result.Success)
+            return Ok(result);
+        if(result.Message == "User not found")
+            return BadRequest(result);
+        return StatusCode(500,result);
+    }
 
 }
