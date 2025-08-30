@@ -10,6 +10,8 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
     {
         builder.Property(u => u.UserName).IsRequired().HasMaxLength(64);
         builder.Property(u => u.RowVersion).IsRowVersion().HasConversion<byte[]>();
+        builder.HasIndex(u => u.UserName).IsUnique();
+        builder.HasIndex(u => u.Email).IsUnique();
         builder.Property(u=> u.ImageUrl).IsRequired(false);
     }
 }
