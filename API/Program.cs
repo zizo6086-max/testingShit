@@ -5,7 +5,9 @@ using Scalar.AspNetCore;
 using Swashbuckle.AspNetCore.Filters;
 using API.Extensions;
 using API.Filters;
+using API.Middleware;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
 
 namespace API;
 
@@ -56,26 +58,31 @@ public class Program
 
         var app = builder.Build();
 
-        // Add global exception handling as the first middleware
         app.UseGlobalExceptionHandling();
-
-        // Configure the HTTP request pipeline.
-        app.UseSwagger(options =>
-        {
-            options.RouteTemplate = "openapi/{documentName}.json";
-        });
-        app.MapScalarApiReference(options =>
-        {
-            options.WithLayout(ScalarLayout.Modern);
-            options.WithTitle("UserZone-api")
-                .WithTheme(ScalarTheme.DeepSpace).WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-        });
-        app.UseStaticFiles();
+        
+        app.UseMiddleware<SecurityHeadersMiddleware>();
+        app.UseMiddleware<PathTraversalProtectionMiddleware>();
         app.UseHttpsRedirection();
+        app.ConfigureStaticFiles(app.Environment);
+        app.UseRouting();
         app.UseCors("AllowAll");
+
         app.UseAuthentication();
         app.UseAuthorization();
-
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger(options =>
+            {
+                options.RouteTemplate = "openapi/{documentName}.json";
+            });
+            app.MapScalarApiReference(options =>
+            {
+                options.WithLayout(ScalarLayout.Modern);
+                options.WithTitle("UserZone-api")
+                    .WithTheme(ScalarTheme.DeepSpace)
+                    .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+            });
+        }
         app.MapControllers().RequireCors("AllowAll");
 
         app.Run();
