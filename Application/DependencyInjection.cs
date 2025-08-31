@@ -1,5 +1,8 @@
-﻿using Application.DTOs;
+﻿using System.Reflection;
+using Application.DTOs;
 using Application.Services;
+using Application.Validators.User;
+using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<PhotoService>();
         services.AddScoped<UserService>();
         services.AddScoped<EmailService>();
+        services.AddValidatorsFromAssembly(Assembly.GetAssembly(typeof(DependencyInjection)));
         return services;
     }
 
