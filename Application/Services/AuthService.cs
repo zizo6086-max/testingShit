@@ -1,6 +1,8 @@
 ﻿using System.Security.Claims;
 using System.Security.Cryptography;
+using Application.Common.Interfaces;
 using Application.DTOs;
+using Domain.Constants;
 using Domain.Models;
 using Domain.Models.Auth;
 using Infrastructure.DataAccess;
@@ -15,7 +17,7 @@ public class AuthService(
     UserManager<AppUser> userManager,
     RoleManager<IdentityRole<int>> roleManager,
     IConfiguration configuration,
-    JwtTokenService jwtTokenService)
+    IJwtTokenService jwtTokenService) : IAuthService
 {
 
     private async Task<Result> CheckExistence(RegisterDto registerDto)
@@ -29,13 +31,13 @@ public class AuthService(
         var result = new Result();
         if (userExists != null)
         {
-            result.Message = "Username already exists!";
+            result.Message = AuthConstants.Messages.UsernameAlreadyExists;
             return result;
         }
         userExists = await userManager.FindByEmailAsync(email);
         if (userExists != null)
         {
-            result.Message = "Email already exists!";
+            result.Message = AuthConstants.Messages.EmailAlreadyExists;
             return result;
         }
         result.Success = true;
@@ -76,7 +78,7 @@ public class AuthService(
 
             await unitOfWork.CommitAsync();
             transaction.Commit();
-            result.Message = "Successfully registered new user!";
+            result.Message = AuthConstants.Messages.UserRegisteredSuccessfully;
             return result;
         }
         catch (Exception ex)
@@ -117,7 +119,7 @@ public class AuthService(
             return new AuthResult()
             {
                 Success = true,
-                Message = "Successfully Refreshed Token",
+                Message = AuthConstants.Messages.TokenRefreshedSuccessfully,
                 AccessToken = accessToken,
                 RefreshToken = newRefreshToken.Token,
                 AccessTokenExpiration = expiresAt,
@@ -169,11 +171,11 @@ public class AuthService(
                 user = await userManager.FindByEmailAsync(loginDto.EmailOrUsername);
             else
                 user = await userManager.FindByNameAsync(loginDto.EmailOrUsername);
-            if (user == null || !(await userManager.CheckPasswordAsync(user, loginDto.Password)))
-            {
-                result.Message = "Invalid Credentials!";
-                return result;
-            }
+                    if (user == null || !(await userManager.CheckPasswordAsync(user, loginDto.Password)))
+        {
+            result.Message = AuthConstants.Messages.InvalidCredentials;
+            return result;
+        }
 
             var claims = await GenerateUserClaimsAsync(user);
             var (accessToken, expiresAt) = await jwtTokenService.GenerateJwtTokenAsync(claims);

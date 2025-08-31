@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
+using Application.Common.Interfaces;
 using Application.DTOs;
-using Application.Services;
 using Domain.Models;
 using Domain.Models.Auth;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 [ApiController]
 [Route("[controller]")]
-public class UserController(UserService userService, UserManager<AppUser> userManager,PhotoService photoService,ILogger<UserController> logger): ControllerBase
+public class UserController(IUserService userService, UserManager<AppUser> userManager, IPhotoService photoService,ILogger<UserController> logger): ControllerBase
 {
     [HttpGet("me")]
     [Authorize]

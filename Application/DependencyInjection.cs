@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
+using Application.Common.Interfaces;
 using Application.DTOs;
 using Application.Services;
-using Application.Validators.User;
 using FluentValidation;
 using FluentValidation.Internal;
 using Microsoft.Extensions.Configuration;
@@ -15,12 +15,12 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped<AuthService>();
-        services.AddScoped<JwtTokenService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.Configure<PhotoOptions>(configuration.GetSection("PhotoOptions"));
-        services.AddScoped<PhotoService>();
-        services.AddScoped<UserService>();
-        services.AddScoped<EmailService>();
+        services.AddScoped<IPhotoService, PhotoService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IEmailService, EmailService>();
         services.AddValidatorsFromAssembly(Assembly.GetAssembly(typeof(DependencyInjection)));
         services.AddFluentValidationAutoValidation(autoValidationMvcConfiguration =>
         {

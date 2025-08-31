@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
+using Application.Common.Interfaces;
 using Application.DTOs;
-using Application.Services;
+using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 namespace API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController(AuthService authService,ILogger<AuthController> logger, EmailService emailService) : ControllerBase
+public class AuthController(IAuthService authService,ILogger<AuthController> logger, IEmailService emailService) : ControllerBase
 {
     [HttpPost("register")]
     [AllowAnonymous]
@@ -19,7 +20,7 @@ public class AuthController(AuthService authService,ILogger<AuthController> logg
         {
             return BadRequest(ModelState);
         }
-        var result = await authService.RegisterAsync(registerDto,"User");
+        var result = await authService.RegisterAsync(registerDto, AuthConstants.Roles.User);
         if (!result.Success)
         {
             return BadRequest(result);

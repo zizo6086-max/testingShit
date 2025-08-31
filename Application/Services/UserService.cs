@@ -1,4 +1,5 @@
-﻿using Application.DTOs;
+﻿using Application.Common.Interfaces;
+using Application.DTOs;
 using Domain.Models;
 using Domain.Models.Auth;
 using Microsoft.AspNetCore.Http;
@@ -9,7 +10,7 @@ namespace Application.Services;
 
 public class UserService(UserManager<AppUser> userManager,
     ILogger<UserService> logger,
-    PhotoService photoService)
+    IPhotoService photoService) : IUserService
 {
     public async Task<UserDto> GetUserInfoAsync(int userId)
     {

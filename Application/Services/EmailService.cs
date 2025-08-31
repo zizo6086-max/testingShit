@@ -1,3 +1,4 @@
+using Application.Common.Interfaces;
 using Application.DTOs;
 using Domain.Models.Auth;
 using FluentEmail.Core;
@@ -7,7 +8,8 @@ using Microsoft.Extensions.Configuration;
 
 namespace Application.Services;
 
-public class EmailService(IFluentEmail fluentEmail, IConfiguration configuration, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
+public class EmailService(IFluentEmail fluentEmail, IConfiguration configuration, 
+    UserManager<AppUser> userManager, SignInManager<AppUser> signInManager) : IEmailService
 {
     private readonly IFluentEmail _fluentEmail = fluentEmail;
     private readonly IConfiguration _configuration = configuration;

@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Domain.Models;
 using Domain.Models.Auth;
+using Infrastructure.Configuration;
 using Infrastructure.DataAccess;
 using Infrastructure.Seeding;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -19,9 +20,13 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        // ADD THESE LINES FIRST:
+        services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
+        services.Configure<GoogleAuthSettings>(configuration.GetSection(GoogleAuthSettings.SectionName));
         
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("ProductionDatabase")));
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
         
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddHostedService<DataBaseSeederService>();

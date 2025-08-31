@@ -1,4 +1,5 @@
-﻿using Application.DTOs;
+﻿using Application.Common.Interfaces;
+using Application.DTOs;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -9,22 +10,16 @@ namespace Application.Services;
 /// <summary>
 /// handles photo upload and deletion operations
 /// </summary>
-public class PhotoService
+public class PhotoService(
+    IWebHostEnvironment webHostEnvironment,
+    ILogger<PhotoService> logger,
+    IOptions<PhotoOptions> options) : IPhotoService
 {
-    private readonly IWebHostEnvironment _webHostEnvironment;
-    private readonly ILogger<PhotoService> _logger;            
-    private readonly PhotoOptions _options;               
-    private readonly SemaphoreSlim _uploadSemaphore;           
-    public PhotoService(
-        IWebHostEnvironment webHostEnvironment,
-        ILogger<PhotoService> logger,
-        IOptions<PhotoOptions> options)
-    {
-        _webHostEnvironment = webHostEnvironment;
-        _logger = logger;
-        _options = options.Value;
-        _uploadSemaphore = new SemaphoreSlim(_options.MaxConcurrentUploads);
-    }
+    private readonly IWebHostEnvironment _webHostEnvironment = webHostEnvironment;
+    private readonly ILogger<PhotoService> _logger = logger;            
+    private readonly PhotoOptions _options = options.Value;               
+    private readonly SemaphoreSlim _uploadSemaphore = new SemaphoreSlim(options.Value.MaxConcurrentUploads);
+
     /// <summary>
     /// Uploads a list of files to the specified directory and returns URLs for database storage
     /// </summary>

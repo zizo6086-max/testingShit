@@ -1,40 +1,41 @@
-﻿using System.Security.Claims;
+﻿using Application.Common.Interfaces;
+using System.Security.Claims;
 using System.Text;
 using Domain.Models;
 using Domain.Models.Auth;
+using Infrastructure.Configuration;
 using Infrastructure.DataAccess;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Application.Services;
 
 public class JwtTokenService(
-    IConfiguration configuration,
+    IOptions<JwtSettings> jwtSettings,
     TokenValidationParameters tokenValidationParameters,
     ILogger<JwtTokenService> logger,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork) : IJwtTokenService
 {
+    private readonly JwtSettings _jwtSettings = jwtSettings.Value;
 
     public async Task<(string token, DateTime expirationDate)> GenerateJwtTokenAsync(IEnumerable<Claim> claims)
     {
         try
         {
-            var secretKey = configuration["Jwt:SecretKey"] ??
-                            throw new ApplicationException("JWT Secret Key is not configured");
-            var issuer = configuration["Jwt:ValidIssuer"] ??
-                         throw new ApplicationException("JWT Issuer is not configured");
-            var audience = configuration["Jwt:ValidAudience"] ??
-                           throw new ApplicationException("JWT Audience is not configured");
+            var secretKey = _jwtSettings.SecretKey ?? throw new ApplicationException("JWT Secret Key is not configured");
+            var issuer = _jwtSettings.ValidIssuer ?? throw new ApplicationException("JWT Issuer is not configured");
+            var audience = _jwtSettings.ValidAudience ?? throw new ApplicationException("JWT Audience is not configured");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var claimsList = claims.ToList();
             var roleClaim = claimsList.FirstOrDefault(x => x.Type == ClaimTypes.Role)?.Value;
             var expiryMinutes = roleClaim switch
             {
-                "Admin" => int.Parse(configuration["Jwt:AdminExpiryMinutes"]!),
-                "User" => int.Parse(configuration["Jwt:UserExpiryMinutes"]!),
-                _ => int.Parse(configuration["Jwt:UserExpiryMinutes"]!)
+                "Admin" => _jwtSettings.AdminExpiryMinutes,
+                "User" => _jwtSettings.UserExpiryMinutes,
+                _ => _jwtSettings.UserExpiryMinutes
             };
             var expiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
             var fullClaims = AddStandardClaims(claimsList);
@@ -86,8 +87,7 @@ public class JwtTokenService(
         {
             UserId = userId,
             CreatedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddHours(
-                int.Parse(configuration["Jwt:RefreshTokenExpiryHours"] ?? "5"))
+            ExpiresAt = DateTime.UtcNow.AddHours(_jwtSettings.RefreshTokenExpiryHours)
         };
         // ToDo: Removing Old Tokens
         // *note*: Consider implementing a scheduled cleanUp Service 
