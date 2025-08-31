@@ -4,6 +4,8 @@ using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using Swashbuckle.AspNetCore.Filters;
 using API.Extensions;
+using API.Filters;
+using Microsoft.AspNetCore.Mvc;
 
 namespace API;
 
@@ -13,12 +15,19 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddControllers()
+        builder.Services.AddControllers(options =>
+            {
+                options.Filters.Add<ValidationFilter>();
+            })
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
                 options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull; // Optional
-            });      
+            });  
+        builder.Services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.SuppressModelStateInvalidFilter = true;
+        });
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowAll", policy =>
