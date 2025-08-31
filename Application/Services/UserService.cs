@@ -47,7 +47,13 @@ public class UserService(UserManager<AppUser> userManager,
             }
 
             var fileUrls = await photoService.UploadFilesAsync(new[] { file }, "Users");
-
+            if (fileUrls.Count == 0)
+            {
+                return new Result()
+                {
+                    Message = "Failed to upload profile picture"
+                };
+            }
             user.ImageUrl = fileUrls[0];
             var updateResult = await userManager.UpdateAsync(user);
             if (updateResult.Succeeded)

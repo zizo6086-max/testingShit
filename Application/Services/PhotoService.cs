@@ -58,6 +58,11 @@ public class PhotoService
             {
                 if (file.Length > 0)
                 {
+                    if (!IsValidFileType(file))
+                    {
+                        _logger.LogWarning("Skipped invalid file type: {FileName}", file.FileName);
+                        continue;
+                    }
                     // Generate a unique filename to prevent overwriting
                     var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
                     var filePath = Path.Combine(uploadPath, fileName);
@@ -132,5 +137,38 @@ public class PhotoService
             _logger.LogError(ex, "Error deleting file: {FileUrl}", fileUrl);
             return false;
         }
+    }
+    private bool IsValidFileType(IFormFile file)
+    {
+        if (_options.AllowedFileFormats.Count == 0)
+        {
+            _logger.LogWarning("No allowed file types configured. Allowing all files.");
+            return true;
+        }
+
+        // Check by content type (MIME type)
+        if (!string.IsNullOrEmpty(file.ContentType) && 
+            _options.AllowedFileFormats.Contains(file.ContentType, StringComparer.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Check by file extension as fallback
+        var fileExtension = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+        if (!string.IsNullOrEmpty(fileExtension))
+        {
+            // Remove the dot from extension for comparison
+            var extensionWithoutDot = fileExtension.TrimStart('.');
+            
+            // Check if any allowed type ends with this extension (for cases like "image/jpeg" -> "jpeg")
+            if (_options.AllowedFileFormats.Any(allowedType => 
+                    allowedType.ToLowerInvariant().EndsWith(extensionWithoutDot) ||
+                    allowedType.ToLowerInvariant() == fileExtension))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

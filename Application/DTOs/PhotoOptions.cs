@@ -6,7 +6,13 @@
 public class PhotoOptions
 {
     // Defines allowed file extensions for photo uploads
-    public IEnumerable<string> AllowedFileFormats { get; set; } = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+    public List<string> AllowedFileFormats { get; set; } =
+    [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp"
+    ];
     
     // Maximum allowed file size (default: 5MB)
     public long MaxFileSize { get; set; } = 5 * 1024 * 1024;
