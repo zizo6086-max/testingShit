@@ -138,7 +138,7 @@ public class PhotoService(
         if (_options.AllowedFileFormats.Count == 0)
         {
             _logger.LogWarning("No allowed file types configured. Allowing all files.");
-            return true;
+            return false;
         }
 
         // Check by content type (MIME type)
