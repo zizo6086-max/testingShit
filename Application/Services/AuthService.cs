@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using System.Security.Cryptography;
+using Application.Common.Extensions;
 using Application.Common.Interfaces;
 using Application.DTOs;
 using Domain.Constants;
@@ -8,6 +9,7 @@ using Domain.Models.Auth;
 using Infrastructure.DataAccess;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Application.Services;
@@ -17,7 +19,8 @@ public class AuthService(
     UserManager<AppUser> userManager,
     RoleManager<IdentityRole<int>> roleManager,
     IConfiguration configuration,
-    IJwtTokenService jwtTokenService) : IAuthService
+    IJwtTokenService jwtTokenService,
+    ILogger<AuthService> logger) : IAuthService
 {
 
     private async Task<Result> CheckExistence(RegisterDto registerDto)
@@ -165,18 +168,25 @@ public class AuthService(
     {
         try
         {
+            logger.LogServiceOperation("User login attempt", loginDto.EmailOrUsername);
+            
             AppUser? user;
             var result = new AuthResult();
             if (loginDto.EmailOrUsername.Contains('@'))
                 user = await userManager.FindByEmailAsync(loginDto.EmailOrUsername);
             else
                 user = await userManager.FindByNameAsync(loginDto.EmailOrUsername);
-                    if (user == null || !(await userManager.CheckPasswordAsync(user, loginDto.Password)))
-        {
-            result.Message = AuthConstants.Messages.InvalidCredentials;
-            return result;
-        }
+                    
+            if (user == null || !(await userManager.CheckPasswordAsync(user, loginDto.Password)))
+            {
+                logger.LogAuthenticationAttempt(loginDto.EmailOrUsername, false);
+                result.Message = AuthConstants.Messages.InvalidCredentials;
+                return result;
+            }
 
+            logger.LogAuthenticationAttempt(loginDto.EmailOrUsername, true);
+            logger.LogUserAction("Login", user.Id.ToString());
+            
             var claims = await GenerateUserClaimsAsync(user);
             var (accessToken, expiresAt) = await jwtTokenService.GenerateJwtTokenAsync(claims);
             var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(user.Id);
@@ -189,6 +199,7 @@ public class AuthService(
         }
         catch (ApplicationException ex)
         {
+            logger.LogError(ex, "Application error during login for {Identifier}", loginDto.EmailOrUsername);
             return new AuthResult()
             {
                 Message = ex.Message
@@ -196,6 +207,7 @@ public class AuthService(
         }
         catch (SecurityTokenException ex)
         {
+            logger.LogError(ex, "Security token error during login for {Identifier}", loginDto.EmailOrUsername);
             return new AuthResult()
             {
                 Message = ex.Message
