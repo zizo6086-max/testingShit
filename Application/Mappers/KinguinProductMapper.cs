@@ -13,7 +13,7 @@ namespace Application.Mappers;
             WriteIndented = false
         };
 
-        public static KinguinProduct MapToEntity(this KinguinProductDto dto, KinguinProduct? existingProduct = null)
+        public static KinguinProduct MapToEntity(this KinguinProductDto dto, double margin , KinguinProduct? existingProduct = null)
         {
             var product = existingProduct ?? new KinguinProduct();
             
@@ -24,7 +24,7 @@ namespace Application.Mappers;
             product.OriginalName = dto.OriginalName;
             product.Description = dto.Description;
             product.Platform = dto.Platform;
-            product.Price = dto.Price;
+            product.Price = dto.Price * (decimal)(margin + 1);
             product.Qty = dto.Qty;
             product.TextQty = dto.TextQty;
             product.TotalQty = dto.TotalQty;
