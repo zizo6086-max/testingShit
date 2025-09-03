@@ -69,20 +69,17 @@ public class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
-        if (app.Environment.IsDevelopment())
+        app.UseSwagger(options =>
         {
-            app.UseSwagger(options =>
-            {
-                options.RouteTemplate = "openapi/{documentName}.json";
-            });
-            app.MapScalarApiReference(options =>
-            {
-                options.WithLayout(ScalarLayout.Modern);
-                options.WithTitle("UserZone-api")
-                    .WithTheme(ScalarTheme.DeepSpace)
-                    .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-            });
-        }
+            options.RouteTemplate = "openapi/{documentName}.json";
+        });
+        app.MapScalarApiReference(options =>
+        {
+            options.WithLayout(ScalarLayout.Modern);
+            options.WithTitle("UserZone-api")
+                .WithTheme(ScalarTheme.DeepSpace)
+                .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+        });
         app.MapControllers().RequireCors("AllowAll");
 
         app.Run();
