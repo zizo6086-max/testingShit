@@ -15,6 +15,11 @@ public class KinguinSyncProcessService(
     private static readonly ConcurrentDictionary<string, (ProcessStatus Status, CancellationTokenSource Cts)> 
         ProcessStatusMap = new();
 
+    public bool IsAnyProcessRunning()
+    {
+        return ProcessStatusMap
+            .Any(p => !IsProcessCompleted(p.Value.Status.Status));
+    }
     public string StartSyncProcess()
     {
         var processId = Guid.NewGuid().ToString();

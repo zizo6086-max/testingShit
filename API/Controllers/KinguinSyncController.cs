@@ -25,12 +25,13 @@ public class KinguinSyncController(
         {
             var userId = User.Identity?.Name ?? "Unknown";
             logger.LogInformation("Manual database sync triggered by user {UserId}", userId);
-            
+            if (syncProcessService.IsAnyProcessRunning())
+            {
+                return Conflict(new { Message = "A sync process is already running" });           
+            }
             var processId = syncProcessService.StartSyncProcess();
-            
             // Start sync in background
             _ = Task.Run(async () => await syncProcessService.StartBackgroundSyncAsync(processId, userId));
-
             return Accepted(new
             {
                 Id = processId,
@@ -53,7 +54,7 @@ public class KinguinSyncController(
         {
             return BadRequest(new { Message = "Process ID is required" });
         }
-
+        
         var status = syncProcessService.GetProcessStatus(processId);
         if (status == null)
         {

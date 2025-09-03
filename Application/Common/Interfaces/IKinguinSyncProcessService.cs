@@ -4,6 +4,7 @@ namespace Application.Common.Interfaces;
 
 public interface IKinguinSyncProcessService
 {
+    bool IsAnyProcessRunning();
     string StartSyncProcess();
     ProcessStatus? GetProcessStatus(string processId);
     bool CancelProcess(string processId);
