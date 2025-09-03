@@ -27,6 +27,9 @@ public static class DependencyInjection
         services.AddScoped<IKinguinProductSyncService, KinguinProductSyncService>();
         //services.AddHostedService<KinguinProductBackgroundSyncService>(); stoped for now
         
+        // Process management services
+        services.AddSingleton<IKinguinSyncProcessService, KinguinSyncProcessService>();
+        
         services.AddValidatorsFromAssembly(Assembly.GetAssembly(typeof(DependencyInjection)));
         services.AddFluentValidationAutoValidation(autoValidationMvcConfiguration =>
         {

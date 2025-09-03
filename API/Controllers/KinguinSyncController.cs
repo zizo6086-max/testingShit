@@ -1,5 +1,5 @@
 using Application.Common.Interfaces;
-using Application.DTOs;
+using Application.Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +9,7 @@ namespace API.Controllers;
 [Route("api/[controller]")]
 [Authorize]
 public class KinguinSyncController(
-    IKinguinProductSyncService syncService,
+    IKinguinSyncProcessService syncProcessService,
     ILogger<KinguinSyncController> logger)
     : ControllerBase
 {
@@ -19,35 +19,95 @@ public class KinguinSyncController(
     /// <returns>Synchronization result with statistics</returns>
     [HttpPost("sync-database")]
     [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<KinguinSyncResult>> SyncDatabase(CancellationToken cancellationToken = default)
+    public ActionResult SyncDatabase()
     {
         try
         {
-            logger.LogInformation("Manual database sync triggered by user {UserId}", User.Identity?.Name);
+            var userId = User.Identity?.Name ?? "Unknown";
+            logger.LogInformation("Manual database sync triggered by user {UserId}", userId);
             
-            var result = await syncService.SyncProductsToDatabaseAsync(cancellationToken);
+            var processId = syncProcessService.StartSyncProcess();
             
-            if (result.IsSuccess)
-            {
-                logger.LogInformation(
-                    "Manual database sync completed successfully. " +
-                    "Processed: {Total}, Created: {Created}, Updated: {Updated}, Duration: {Duration}",
-                    result.TotalProductsProcessed,
-                    result.ProductsCreated,
-                    result.ProductsUpdated,
-                    result.Duration);
-            }
-            else
-            {
-                logger.LogError("Manual database sync failed: {ErrorMessage}", result.ErrorMessage);
-            }
+            // Start sync in background
+            _ = Task.Run(async () => await syncProcessService.StartBackgroundSyncAsync(processId, userId));
 
-            return Ok(result);
+            return Accepted(new
+            {
+                Id = processId,
+                StatusUrl = $"/api/kinguinsync/status/{processId}",
+                CancelUrl = $"/api/kinguinsync/cancel/{processId}"
+            });
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error during manual database sync");
-            return StatusCode(500, new { error = "Internal server error during database synchronization" });
+            logger.LogError(ex, "Error starting manual database sync");
+            return StatusCode(500, new { error = "Internal server error starting database synchronization" });
         }
+    }
+
+    [HttpGet("status/{processId}")]
+    [Authorize(Roles = "Admin")]
+    public IActionResult GetStatus(string processId)
+    {
+        if (string.IsNullOrEmpty(processId))
+        {
+            return BadRequest(new { Message = "Process ID is required" });
+        }
+
+        var status = syncProcessService.GetProcessStatus(processId);
+        if (status == null)
+        {
+            return NotFound(new { Message = "Process not found" });
+        }
+
+        return Ok(new
+        {
+            status.Id,
+            status.Status,
+            status.StartedAt,
+            status.CompletedAt,
+            Duration = CalculateDuration(status.StartedAt, status.CompletedAt)
+        });
+    }
+    [HttpPost("cancel/{processId}")]
+    [Authorize(Roles = "Admin")]
+    public IActionResult CancelProcess(string processId)
+    {
+        if (string.IsNullOrEmpty(processId))
+        {
+            return BadRequest(new { Message = "Process ID is required" });
+        }
+
+        var status = syncProcessService.GetProcessStatus(processId);
+        if (status == null)
+        {
+            return NotFound(new { Message = "Process not found" });
+        }
+
+        if (IsProcessCompleted(status.Status))
+        {
+            return BadRequest(new { Message = $"Process cannot be cancelled as it is already {status.Status.ToLower()}" });
+        }
+
+        var cancelled = syncProcessService.CancelProcess(processId);
+        if (!cancelled)
+        {
+            return BadRequest(new { Message = "Unable to cancel process" });
+        }
+
+        return Ok(new { Message = "Cancellation requested", ProcessId = processId });
+    }
+
+    private static string CalculateDuration(DateTime startedAt, DateTime? completedAt)
+    {
+        var endTime = completedAt ?? DateTime.UtcNow;
+        return (endTime - startedAt).ToString(@"hh\:mm\:ss");
+    }
+
+    private static bool IsProcessCompleted(string status)
+    {
+        return status == ProcessStatusConstants.Completed || 
+               status == ProcessStatusConstants.Cancelled || 
+               status == ProcessStatusConstants.Failed;
     }
 }
