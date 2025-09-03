@@ -21,11 +21,19 @@ public static class DependencyInjection
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IEmailService, EmailService>();
+        
+        // Kinguin API services
+        services.AddHttpClient<IKinguinApiService, KinguinApiService>();
+        services.AddScoped<IKinguinProductSyncService, KinguinProductSyncService>();
+        //services.AddHostedService<KinguinProductBackgroundSyncService>(); stoped for now
+        
         services.AddValidatorsFromAssembly(Assembly.GetAssembly(typeof(DependencyInjection)));
         services.AddFluentValidationAutoValidation(autoValidationMvcConfiguration =>
         {
             autoValidationMvcConfiguration.ValidationStrategy = ValidationStrategy.All;
-        });        return services;
+        });
+        
+        return services;
     }
 
 }

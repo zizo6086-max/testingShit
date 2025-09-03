@@ -1,0 +1,10 @@
+/API/bin/
+/Application/bin/
+/Infrastructure/bin/
+API/obj/
+Application/obj/
+Infrastructure/obj/
+Domain/bin/
+Domain/obj/
+.idea/
+.run/
