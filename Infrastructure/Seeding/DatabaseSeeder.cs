@@ -40,8 +40,8 @@ public class DatabaseSeeder
                 {
                     UserName = "user",
                     NormalizedUserName = "USER",
-                    Email = "zyadhimself1@gmail.com",
-                    NormalizedEmail = "ZYADHIMSELF1@GMAIL.COM",
+                    Email = "user@gmail.com",
+                    NormalizedEmail = "USER@GMAIL.COM",
                     EmailConfirmed = true,
                     SecurityStamp = Guid.NewGuid().ToString(),
                     PasswordHash =
@@ -55,12 +55,12 @@ public class DatabaseSeeder
             await context.UserRoles.AddRangeAsync(new IdentityUserRole<int>()
                 {
                     RoleId = 1,
-                    UserId = 1
+                    UserId = 3
                 },
                 new IdentityUserRole<int>()
                 {
                     RoleId = 2,
-                    UserId = 2
+                    UserId = 4
                 });
             await context.SaveChangesAsync();
         }
