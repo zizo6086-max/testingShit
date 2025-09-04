@@ -116,6 +116,123 @@ namespace Application.Mappers;
             return product;
         }
 
+        public static KinguinProductDto MapToDto(this KinguinProduct entity)
+        {
+            var dto = new KinguinProductDto
+            {
+                KinguinId = entity.KinguinId,
+                ProductId = entity.ProductId,
+                Name = entity.Name,
+                OriginalName = entity.OriginalName,
+                Description = entity.Description,
+                Platform = entity.Platform,
+                ReleaseDate = entity.ReleaseDate?.ToString("yyyy-MM-dd"),
+                Qty = entity.Qty,
+                TextQty = entity.TextQty,
+                Price = entity.Price,
+                IsPreorder = entity.IsPreorder,
+                MetacriticScore = entity.MetacriticScore,
+                RegionalLimitations = entity.RegionalLimitations,
+                RegionId = entity.RegionId,
+                ActivationDetails = entity.ActivationDetails,
+                AgeRating = entity.AgeRating,
+                Steam = entity.Steam,
+                OffersCount = entity.OffersCount,
+                TotalQty = entity.TotalQty,
+                UpdatedAt = entity.UpdatedAt?.ToString("yyyy-MM-ddTHH:mm:ssK")
+            };
+
+            dto.Developers = entity.GetDevelopers();
+            dto.Publishers = entity.GetPublishers();
+            dto.Genres = entity.GetGenres();
+            dto.Languages = entity.GetLanguages();
+            dto.Tags = entity.GetTags();
+            dto.CountryLimitation = entity.GetCountryLimitations();
+            dto.MerchantName = entity.GetMerchantNames();
+            dto.CheapestOfferId = entity.GetCheapestOfferIds();
+
+            var videos = entity.GetVideos();
+            dto.Videos = videos.Select(v => new VideoInfoDto { VideoId = v.VideoId }).ToList();
+
+            var sysReqs = entity.GetSystemRequirements();
+            dto.SystemRequirements = sysReqs.Select(sr => new SystemRequirementDto
+            {
+                System = sr.System,
+                Requirement = sr.Requirement
+            }).ToList();
+
+            var images = entity.GetImages();
+            if (images != null)
+            {
+                dto.Images = new ProductImagesDto
+                {
+                    Screenshots = images.Screenshots.Select(s => new ScreenshotDto
+                    {
+                        Url = s.Url,
+                        Thumbnail = s.Thumbnail
+                    }).ToList(),
+                    Cover = images.Cover != null ? new CoverDto
+                    {
+                        Url = images.Cover.Url,
+                        Thumbnail = images.Cover.Thumbnail
+                    } : null
+                };
+            }
+
+            var offers = entity.GetOffers();
+            dto.Offers = offers.Select(o => new OfferDto
+            {
+                Name = o.Name,
+                OfferId = o.OfferId,
+                Price = o.Price,
+                Qty = o.Qty,
+                AvailableQty = o.AvailableQty,
+                AvailableTextQty = o.AvailableTextQty,
+                TextQty = o.TextQty,
+                MerchantName = o.MerchantName,
+                IsPreorder = o.IsPreorder,
+                ReleaseDate = o.ReleaseDate,
+                Wholesale = o.Wholesale != null ? new WholesaleInfoDto
+                {
+                    Enabled = o.Wholesale.Enabled,
+                    Tiers = o.Wholesale.Tiers.Select(t => new WholesaleTierDto
+                    {
+                        Level = t.Level,
+                        Price = t.Price
+                    }).ToList()
+                } : null
+            }).ToList();
+
+            return dto;
+        }
+
+        public static KinguinProductListItemDto MapToListItemDto(this KinguinProduct entity)
+        {
+            var images = entity.GetImages();
+            return new KinguinProductListItemDto
+            {
+                KinguinId = entity.KinguinId,
+                ProductId = entity.ProductId,
+                Name = entity.Name,
+                OriginalName = entity.OriginalName,
+                Platform = entity.Platform,
+                Price = entity.Price,
+                OffersCount = entity.OffersCount,
+                TotalQty = entity.TotalQty,
+                IsPreorder = entity.IsPreorder,
+                MetacriticScore = entity.MetacriticScore,
+                Images = images != null ? new ProductImagesDto
+                {
+                    Cover = images.Cover != null ? new CoverDto
+                    {
+                        Url = images.Cover.Url,
+                        Thumbnail = images.Cover.Thumbnail
+                    } : null
+                } : null
+            };
+        }
+
+
         // Helper methods to deserialize JSON fields back to objects
         public static List<string> GetDevelopers(this KinguinProduct product)
         {

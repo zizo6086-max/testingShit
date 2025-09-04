@@ -25,6 +25,7 @@ public static class DependencyInjection
         // Kinguin API services
         services.AddHttpClient<IKinguinApiService, KinguinApiService>();
         services.AddScoped<IKinguinProductSyncService, KinguinProductSyncService>();
+        services.AddScoped<IKinguinProductQueryService, KinguinProductQueryService>();
         //services.AddHostedService<KinguinProductBackgroundSyncService>(); stoped for now
         
         // Process management services
