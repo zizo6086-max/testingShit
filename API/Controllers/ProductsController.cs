@@ -36,6 +36,38 @@ public class ProductsController(IKinguinProductQueryService queryService) : Cont
         if (dto == null) return NotFound();
         return Ok(dto);
     }
+    [HttpDelete("{productId}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteProduct([FromRoute] string productId, CancellationToken cancellationToken)
+    {
+        var result = await queryService.DeleteAsync(productId, cancellationToken);
+        if (result.Success)
+        {
+            return NoContent();
+        }
+        return BadRequest(result);
+    }
+
+    [HttpGet("deleted")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetDeletedProducts(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 25, CancellationToken cancellationToken = default)
+    {
+        var result = await queryService.GetDeletedProducts(page, limit, cancellationToken);
+        return Ok(result);
+    }
+    [HttpPut("Restore{productId}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> RestoreProduct([FromRoute] string productId, CancellationToken cancellationToken)
+    {
+        var result = await queryService.RestoreAsync(productId, cancellationToken);
+        if (result.Success)
+        {
+            return NoContent();
+        }
+        return BadRequest(result);
+    }
 }
 
 

@@ -4,6 +4,7 @@ using Application.Mappers;
 using Infrastructure.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using Application.DTOs;
 using Domain.Models.Store;
 
 namespace Application.Services;
@@ -106,7 +107,10 @@ public class KinguinProductQueryService(AppDbContext context) : IKinguinProductQ
         if (limit < 1) limit = 1;
         if (limit > 100) limit = 100;
 
-        var query = context.KinguinProducts.AsNoTracking().Where(p => !p.IsDeleted).AsQueryable();
+        var query = context.KinguinProducts
+            .AsNoTracking()
+            .Where(p => !p.IsDeleted)
+            .AsQueryable();
         query = ApplyFilters(query, name, platform, regionId, isPreorder, tags, genre, updatedSince);
         query = ApplyOrdering(query, sortBy, sortType);
 
@@ -150,6 +154,69 @@ public class KinguinProductQueryService(AppDbContext context) : IKinguinProductQ
             .Where(p => !p.IsDeleted && p.ProductId == productId)
             .FirstOrDefaultAsync(cancellationToken);
         return entity?.MapToDto();
+    }
+
+    public async Task<Result> DeleteAsync(string productId, CancellationToken cancellationToken = default)
+    {
+        var product = await context.KinguinProducts.FirstOrDefaultAsync(p => p.ProductId == productId, cancellationToken: cancellationToken);
+        if (product == null || product.IsDeleted)
+        {
+            return new Result()
+            {
+                Success = true,
+                Message = "Product is Deleted"
+            };
+        }
+        product.IsDeleted = true;
+        product.DeletedAt = DateTime.UtcNow;
+        await context.SaveChangesAsync(cancellationToken);
+        return new Result()
+        {
+            Success = true,
+            Message = "Product Deleted"
+        };
+    }
+
+    public async Task<KinguinProductListResponseDto> GetDeletedProducts(int page = 1, int limit = 25,
+        CancellationToken cancellationToken = default)
+    {
+        if (page < 1) page = 1;
+        if (limit < 1) limit = 1;
+        if (limit > 100) limit = 100;
+        var query = context.KinguinProducts
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .Where(p => p.IsDeleted);
+        var itemCount = await query.CountAsync(cancellationToken);
+        var entities = await query.Skip((page - 1) * limit).Take(limit).ToListAsync(cancellationToken);
+        return new KinguinProductListResponseDto
+        {
+            ItemCount = itemCount,
+            Results = entities.Select(e => e.MapToListItemDto()).ToList()
+        };
+    }
+
+    public async Task<Result> RestoreAsync(string productId, CancellationToken cancellationToken = default)
+    {
+        var product = await context.KinguinProducts
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(p => p.ProductId == productId, cancellationToken: cancellationToken);
+        if (product == null)
+        {
+            return new Result()
+            {
+                Success = false,
+                Message = "Product Not Found"
+            };
+        }
+        product.IsDeleted = false;
+        product.DeletedAt = null;
+        await context.SaveChangesAsync(cancellationToken);
+        return new Result()
+        {
+            Success = true,
+            Message = "Product Restored"
+        };
     }
 }
 

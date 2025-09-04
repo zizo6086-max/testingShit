@@ -1,5 +1,6 @@
 using Application.DTOs.store;
 using System.Linq.Expressions;
+using Application.DTOs;
 using Domain.Models.Store;
 
 namespace Application.Common.Interfaces;
@@ -30,6 +31,12 @@ public interface IKinguinProductQueryService
     
 
     Task<KinguinProductDto?> GetByProductId(string productId, CancellationToken cancellationToken = default);
+    Task<Result> DeleteAsync(string productId, CancellationToken cancellationToken = default);
+
+    public Task<KinguinProductListResponseDto> GetDeletedProducts(int page = 1, int limit = 25, CancellationToken cancellationToken = default);
+
+    public Task<Result> RestoreAsync(string productId, CancellationToken cancellationToken = default);
+
 }
 
 
