@@ -18,6 +18,8 @@ public class KinguinProductQueryService(AppDbContext context) : IKinguinProductQ
         {
             case "price":
                 return sortDescending ? query.OrderByDescending(p => p.Price) : query.OrderBy(p => p.Price);
+            case "name":
+                return sortDescending ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name);
             default:
                 return query.OrderByDescending(p => p.UpdatedAt);
         }
