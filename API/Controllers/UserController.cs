@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class UserController(IUserService userService, UserManager<AppUser> userManager, IPhotoService photoService,ILogger<UserController> logger): ControllerBase
 {
     [HttpGet("me")]
