@@ -20,6 +20,14 @@ public class KinguinProductSyncService(
     public async Task<KinguinSyncResult> SyncProductsToDatabaseAsync(CancellationToken cancellationToken = default)
     {
         var startTime = DateTime.UtcNow;
+        var storeConfigs = await context.StoreConfigs
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+        double priceMargin = 0.10;
+        if (storeConfigs != null)
+        {
+            priceMargin = storeConfigs.PriceMargin;
+        }
         var result = new KinguinSyncResult
         {
             StartTime = startTime,
@@ -53,7 +61,10 @@ public class KinguinProductSyncService(
                         break;
                     }
 
-                    var batchResult = await ProcessProductBatchAsync(searchResponse.Results, cancellationToken);
+                    var batchResult = await ProcessProductBatchAsync(
+                        searchResponse.Results,
+                        cancellationToken,
+                        priceMargin);
                     
                     totalProcessed += batchResult.TotalProcessed;
                     created += batchResult.Created;
@@ -106,7 +117,7 @@ public class KinguinProductSyncService(
 
     private async Task<BatchProcessResult> ProcessProductBatchAsync(
         List<KinguinProductDto> products,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, double priceMargin)
     {
         var result = new BatchProcessResult();
         var productsToUpsert = new List<KinguinProduct>();
@@ -126,13 +137,13 @@ public class KinguinProductSyncService(
                 
                 if (existingProduct != null)
                 {
-                    var updatedProduct = productDto.MapToEntity(.10, existingProduct);
+                    var updatedProduct = productDto.MapToEntity(priceMargin, existingProduct);
                     productsToUpsert.Add(updatedProduct);
                     result.Updated++;
                 }
                 else
                 {
-                    var newProduct = productDto.MapToEntity(.10);
+                    var newProduct = productDto.MapToEntity(priceMargin);
                     productsToUpsert.Add(newProduct);
                     result.Created++;
                 }

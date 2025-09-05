@@ -13,7 +13,7 @@ namespace Application.Mappers;
             WriteIndented = false
         };
 
-        public static KinguinProduct MapToEntity(this KinguinProductDto dto, double margin , KinguinProduct? existingProduct = null)
+        public static KinguinProduct MapToEntity(this KinguinProductDto dto, double margin = 0.10 , KinguinProduct? existingProduct = null)
         {
             var product = existingProduct ?? new KinguinProduct();
             
@@ -93,7 +93,7 @@ namespace Application.Mappers;
             {
                 Name = o.Name,
                 OfferId = o.OfferId,
-                Price = o.Price,
+                Price = o.Price * (decimal)(margin + 1),
                 Qty = o.Qty,
                 AvailableQty = o.AvailableQty,
                 AvailableTextQty = o.AvailableTextQty,
@@ -107,7 +107,7 @@ namespace Application.Mappers;
                     Tiers = o.Wholesale.Tiers.Select(t => new WholesaleTier
                     {
                         Level = t.Level,
-                        Price = t.Price
+                        Price = t.Price * (decimal)(margin + 1)
                     }).ToList()
                 } : null
             }).ToList();
