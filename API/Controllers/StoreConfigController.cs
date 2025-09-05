@@ -1,10 +1,12 @@
 using Application.Common.Interfaces;
 using Application.DTOs.store;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
+[Authorize(Roles = "Admin")]
 public class StoreConfigController(ILogger<StoreConfigController> logger, IStoreConfigService storeConfigService)
     : ControllerBase
 {
