@@ -9,7 +9,7 @@ using Domain.Models.Store;
 
 namespace Application.Services;
 
-public class KinguinProductQueryService(AppDbContext context) : IKinguinProductQueryService
+public class KinguinProductQueryService(AppDbContext context, IPaginationService<KinguinProduct> paginationService) : IKinguinProductQueryService
 {
     private static IQueryable<KinguinProduct> ApplyOrdering(IQueryable<KinguinProduct> query, string? sortBy, string? sortType)
     {
@@ -91,6 +91,17 @@ public class KinguinProductQueryService(AppDbContext context) : IKinguinProductQ
         return query;
     }
 
+    private static Func<IQueryable<KinguinProduct>, IOrderedQueryable<KinguinProduct>> GetOrderByFunction(string? sortBy, string? sortType)
+    {
+        var sortDescending = string.Equals(sortType, "desc", StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(sortType);
+        return sortBy?.ToLower() switch
+        {
+            "price" => sortDescending ? q => q.OrderByDescending(p => p.Price) : q => q.OrderBy(p => p.Price),
+            "name" => sortDescending ? q => q.OrderByDescending(p => p.Name) : q => q.OrderBy(p => p.Name),
+            _ => q => q.OrderByDescending(p => p.UpdatedAt)
+        };
+    }
+
     public async Task<KinguinProductListResponseDto> SearchMinimalAsync(
         int page = 1,
         int limit = 25,
@@ -113,16 +124,21 @@ public class KinguinProductQueryService(AppDbContext context) : IKinguinProductQ
             .AsNoTracking()
             .Where(p => !p.IsDeleted)
             .AsQueryable();
+        
         query = ApplyFilters(query, name, platform, regionId, isPreorder, tags, genre, updatedSince);
-        query = ApplyOrdering(query, sortBy, sortType);
-
-        var itemCount = await query.CountAsync(cancellationToken);
-        var entities = await query.Skip((page - 1) * limit).Take(limit).ToListAsync(cancellationToken);
+        
+        var orderBy = GetOrderByFunction(sortBy, sortType);
+        var paginatedResult = await paginationService.GetPaginatedAsync(
+            query, 
+            page, 
+            limit, 
+            orderBy: orderBy, 
+            cancellationToken: cancellationToken);
 
         return new KinguinProductListResponseDto
         {
-            ItemCount = itemCount,
-            Results = entities.Select(e => e.MapToListItemDto()).ToList()
+            ItemCount = paginatedResult.ItemCount,
+            Results = paginatedResult.Results.Select(e => e.MapToListItemDto()).ToList()
         };
     }
 
@@ -138,15 +154,19 @@ public class KinguinProductQueryService(AppDbContext context) : IKinguinProductQ
         if (limit > 100) limit = 100;
 
         IQueryable<KinguinProduct> query = context.KinguinProducts.AsNoTracking().Where(p => !p.IsDeleted);
-        if (filter != null) query = query.Where(filter);
-        if (orderBy != null) query = orderBy(query); else query = query.OrderByDescending(p => p.UpdatedAt);
+        
+        var paginatedResult = await paginationService.GetPaginatedAsync(
+            query, 
+            page, 
+            limit, 
+            filter: filter,
+            orderBy: orderBy ?? (q => q.OrderByDescending(p => p.UpdatedAt)), 
+            cancellationToken: cancellationToken);
 
-        var itemCount = await query.CountAsync(cancellationToken);
-        var entities = await query.Skip((page - 1) * limit).Take(limit).ToListAsync(cancellationToken);
         return new KinguinProductListResponseDto
         {
-            ItemCount = itemCount,
-            Results = entities.Select(e => e.MapToListItemDto()).ToList()
+            ItemCount = paginatedResult.ItemCount,
+            Results = paginatedResult.Results.Select(e => e.MapToListItemDto()).ToList()
         };
     }
 
@@ -185,16 +205,23 @@ public class KinguinProductQueryService(AppDbContext context) : IKinguinProductQ
         if (page < 1) page = 1;
         if (limit < 1) limit = 1;
         if (limit > 100) limit = 100;
+        
         var query = context.KinguinProducts
             .AsNoTracking()
             .IgnoreQueryFilters()
             .Where(p => p.IsDeleted);
-        var itemCount = await query.CountAsync(cancellationToken);
-        var entities = await query.Skip((page - 1) * limit).Take(limit).ToListAsync(cancellationToken);
+            
+        var paginatedResult = await paginationService.GetPaginatedAsync(
+            query, 
+            page, 
+            limit, 
+            orderBy: q => q.OrderByDescending(p => p.DeletedAt), 
+            cancellationToken: cancellationToken);
+            
         return new KinguinProductListResponseDto
         {
-            ItemCount = itemCount,
-            Results = entities.Select(e => e.MapToListItemDto()).ToList()
+            ItemCount = paginatedResult.ItemCount,
+            Results = paginatedResult.Results.Select(e => e.MapToListItemDto()).ToList()
         };
     }
 
@@ -221,5 +248,6 @@ public class KinguinProductQueryService(AppDbContext context) : IKinguinProductQ
         };
     }
 }
+
 
 
