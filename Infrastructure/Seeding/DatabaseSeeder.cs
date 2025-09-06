@@ -18,6 +18,10 @@ public class DatabaseSeeder
                 new IdentityRole<int>
                 { 
                     Name = "User", NormalizedName = "USER"
+                },
+                new IdentityRole<int>
+                {
+                    Name = "Seller", NormalizedName = "SELLER"
                 }
             );
             await context.SaveChangesAsync();
