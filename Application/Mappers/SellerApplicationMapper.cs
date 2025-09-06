@@ -35,4 +35,21 @@ public static class SellerApplicationMapper
             DateOfBirth = dto.DateOfBirth,
         };
     }
+
+    public static SellerApplicationListItemDto ToListItemDto(this SellerApplication application)
+    {
+        return new SellerApplicationListItemDto
+        {
+            Id = application.Id,
+            UserId = application.UserId,
+            UserName = application.User?.UserName ?? string.Empty,
+            UserEmail = application.User?.Email ?? string.Empty,
+            PhoneNumber = application.PhoneNumber,
+            City = application.City,
+            Country = application.Country,
+            IdCardUrl = application.IdCardUrl,
+            Status = application.Status,
+            DateSubmitted = application.DateSubmitted
+        };
+    }
 }
