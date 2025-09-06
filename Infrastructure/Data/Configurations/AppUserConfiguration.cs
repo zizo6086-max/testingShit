@@ -13,5 +13,9 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
         builder.HasIndex(u => u.UserName).IsUnique();
         builder.HasIndex(u => u.Email).IsUnique();
         builder.Property(u=> u.ImageUrl).IsRequired(false);
+        builder.Property(u => u.AddressText).IsRequired(false);
+        builder.Property(u => u.City).IsRequired(false);
+        builder.Property(u => u.Country).IsRequired(false);
+        builder.Property(u => u.PostalCode).IsRequired(false);
     }
 }
