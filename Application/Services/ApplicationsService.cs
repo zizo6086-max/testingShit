@@ -6,10 +6,12 @@ using Domain.Constants;
 using Domain.Models.Store;
 using Infrastructure.DataAccess;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services;
 
-public class ApplicationsService(ILogger<ApplicationsService> logger, AppDbContext context, IUnitOfWork unitOfWork)
+public class ApplicationsService(ILogger<ApplicationsService> logger, AppDbContext context, IUnitOfWork unitOfWork, IPaginationService<SellerApplication> paginationService)
     : IApplicationsService
 {
 
@@ -50,5 +52,37 @@ public class ApplicationsService(ILogger<ApplicationsService> logger, AppDbConte
         };
     }
 
+    public async Task<SellerApplicationListResponseDto> SearchSellerApplicationsAsync(
+        int page = 1,
+        int limit = 25,
+        string? status = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (page < 1) page = 1;
+        if (limit < 1) limit = 1;
+        if (limit > 100) limit = 100;
 
+        var query = context.SellerApplications
+            .Include(a => a.User)
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            query = query.Where(a => a.Status == status);
+        }
+
+        var paginatedResult = await paginationService.GetPaginatedAsync(
+            query,
+            page,
+            limit,
+            orderBy: q => q.OrderByDescending(a => a.DateSubmitted),
+            cancellationToken: cancellationToken);
+
+        return new SellerApplicationListResponseDto
+        {
+            ItemCount = paginatedResult.ItemCount,
+            Results = paginatedResult.Results.Select(a => a.ToListItemDto()).ToList()
+        };
+    }
 }

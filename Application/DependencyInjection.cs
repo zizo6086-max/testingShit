@@ -26,8 +26,12 @@ public static class DependencyInjection
         services.AddHttpClient<IKinguinApiService, KinguinApiService>();
         services.AddScoped<IKinguinProductSyncService, KinguinProductSyncService>();
         services.AddScoped<IKinguinProductQueryService, KinguinProductQueryService>();
+        
+        // Generic pagination service
+        services.AddScoped(typeof(IPaginationService<>), typeof(PaginationService<>));
         services.AddScoped<IStoreConfigService, StoreConfigService>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IApplicationsService, ApplicationsService>();
         //services.AddHostedService<KinguinProductBackgroundSyncService>(); stoped for now
         
         // Process management services
