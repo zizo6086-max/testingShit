@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.AddScoped<IKinguinProductSyncService, KinguinProductSyncService>();
         services.AddScoped<IKinguinProductQueryService, KinguinProductQueryService>();
         services.AddScoped<IStoreConfigService, StoreConfigService>();
+        services.AddScoped<IRoleService, RoleService>();
         //services.AddHostedService<KinguinProductBackgroundSyncService>(); stoped for now
         
         // Process management services
