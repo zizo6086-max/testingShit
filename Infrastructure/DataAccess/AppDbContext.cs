@@ -15,6 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<KinguinProduct> KinguinProducts { get; set; }
     public DbSet<StoreConfigs> StoreConfigs { get; set; }
+    public DbSet<SellerApplication> SellerApplications { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

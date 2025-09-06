@@ -1,3 +1,4 @@
+using Domain.Constants;
 using Domain.Models.Auth;
 using Domain.Models.Store;
 using Microsoft.EntityFrameworkCore;
@@ -16,5 +17,9 @@ public class SellerApplicationConfiguration: IEntityTypeConfiguration<SellerAppl
         builder
             .HasIndex(s => s.UserId)
             .IsUnique();
+        builder.Property(s => s.DateSubmitted)
+            .HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(s => s.Status)
+            .HasDefaultValue(SellerApplicationConstants.Pending);
     }
 }
