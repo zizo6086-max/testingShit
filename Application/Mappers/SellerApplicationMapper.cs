@@ -20,11 +20,11 @@ public static class SellerApplicationMapper
             application.DateSubmitted);
     }
 
-    public static SellerApplication ToEntity(this SellerApplicationDto dto)
+    public static SellerApplication ToEntity(this SellerApplicationDto dto, int userId)
     {
         return new SellerApplication()
         {
-            UserId = dto.userId,
+            UserId = userId,
             Address = dto.Address,
             PhoneNumber = dto.PhoneNumber,
             Country = dto.Country,

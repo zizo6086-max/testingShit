@@ -38,7 +38,7 @@ public class ApplicationsService(ILogger<ApplicationsService> logger, AppDbConte
             };
         }
 
-        var application = dto.ToEntity();
+        var application = dto.ToEntity(userId);
         context.SellerApplications.Add(application);
         if (await context.SaveChangesAsync() > 0)
         {
