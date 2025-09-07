@@ -2,6 +2,7 @@ using Application.Common.Interfaces;
 using Application.DTOs;
 using Domain.Constants;
 using Domain.Models.Auth;
+using Infrastructure.DataAccess;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
@@ -10,7 +11,7 @@ namespace Application.Services;
 public class RoleService(
     ILogger<RoleService> logger,
     RoleManager<IdentityRole<int>> roleManager,
-    UserManager<AppUser> userManager)
+    UserManager<AppUser> userManager, AppDbContext context)
     : IRoleService
 {
     public async Task<Result> AddSellerAsync(int userId)
@@ -30,6 +31,10 @@ public class RoleService(
                 Message = "Failed to add Seller Role to User"
             };
         logger.LogInformation("User added to seller role");
+        var userApplication = context.SellerApplications.FirstOrDefault(x => x.UserId == userId);
+        if (userApplication != null)
+            userApplication.Status = SellerApplicationConstants.Approved;
+        await context.SaveChangesAsync();
         return new Result()
         {
             Success = true,
