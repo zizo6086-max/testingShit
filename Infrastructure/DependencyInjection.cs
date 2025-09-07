@@ -27,7 +27,7 @@ public static class DependencyInjection
         services.Configure<KinguinSettings>(configuration.GetSection(KinguinSettings.SectionName));
         
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(configuration.GetConnectionString("ProductionDatabase")));
         
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddHostedService<DataBaseSeederService>();
