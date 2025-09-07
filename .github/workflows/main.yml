@@ -5,33 +5,23 @@ jobs:
   build_and_deploy:
     runs-on: windows-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup .NET SDK
+      - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: Restore dependencies
+          dotnet-version: 9.0
+          
+      - name: Install dependencies
         run: dotnet restore
-
+        
       - name: Build
         run: dotnet build --configuration Release --no-restore
-
-      - name: Run tests
-        run: dotnet test --no-restore
-
       - name: Publish
-        run: dotnet publish ".\API\API.csproj" --configuration Release --output ./publish --no-build
+        run: dotnet publish --configuration Release --output ./publish --runtime win-x86 
+        
+      - name: Test with .NET
+        run: dotnet test
 
       - name: Deploy to MonsterASP.NET via WebDeploy
         uses: rasmusbuchholdt/simply-web-deploy@2.1.0
@@ -40,4 +30,3 @@ jobs:
           server-computer-name: ${{ secrets.SERVER_COMPUTER_NAME }}
           server-username: ${{ secrets.SERVER_USERNAME }}
           server-password: ${{ secrets.SERVER_PASSWORD }}
-          source-path: '.\publish'
