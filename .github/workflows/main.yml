@@ -24,10 +24,13 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
       - name: Run tests
         run: dotnet test --no-restore
 
-      - name: Build and publish
+      - name: Publish
         run: dotnet publish ".\API\API.csproj" --configuration Release --output ./publish --no-build
 
       - name: Deploy to MonsterASP.NET via WebDeploy
