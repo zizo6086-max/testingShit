@@ -9,9 +9,10 @@ public interface IApplicationsService
 {
     public Task<Result> SubmitApplicationAsync(int userId, SellerApplicationDto dto);
     
-    Task<SellerApplicationListResponseDto> SearchSellerApplicationsAsync(
+    public Task<SellerApplicationListResponseDto> SearchSellerApplicationsAsync(
         int page = 1,
         int limit = 25,
         string? status = null,
         CancellationToken cancellationToken = default);
+    public Task<Result> GetApplicationAsync(int userId, int id, CancellationToken cancellationToken = default); 
 }

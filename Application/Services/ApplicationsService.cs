@@ -7,11 +7,13 @@ using Domain.Models.Store;
 using Infrastructure.DataAccess;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
+using Domain.Models.Auth;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services;
 
-public class ApplicationsService(ILogger<ApplicationsService> logger, AppDbContext context, IUnitOfWork unitOfWork, IPaginationService<SellerApplication> paginationService)
+public class ApplicationsService(ILogger<ApplicationsService> logger, AppDbContext context, UserManager<AppUser> userManager, IPaginationService<SellerApplication> paginationService)
     : IApplicationsService
 {
 
@@ -83,6 +85,33 @@ public class ApplicationsService(ILogger<ApplicationsService> logger, AppDbConte
         {
             ItemCount = paginatedResult.ItemCount,
             Results = paginatedResult.Results.Select(a => a.ToListItemDto()).ToList()
+        };
+    }
+
+    public async Task<Result> GetApplicationAsync(int userId, int id, CancellationToken cancellationToken = default)
+    {
+        var application = await context.SellerApplications
+            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken: cancellationToken);
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        var userRole = await userManager.GetRolesAsync(user!); // already have a token
+        if (application?.UserId != userId && !userRole.Contains(AuthConstants.Roles.Admin))
+        {
+            return new Result()
+            {
+                Message = "Applicaiton not found or accessable"
+            };
+        }
+
+        if (application != null)
+            return new Result()
+            {
+                Success = true,
+                Message = "Found",
+                Data = application.ToListItemDto()
+            };
+        return new Result()
+        {
+            Message = "Application not found"
         };
     }
 }

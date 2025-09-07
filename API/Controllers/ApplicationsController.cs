@@ -43,4 +43,13 @@ public class ApplicationsController(IApplicationsService applicationsService) : 
         
         return Ok(response);
     }
+
+    [HttpGet("{ApplicationId}")]
+    [Authorize]
+    public async Task<IActionResult> GetByApplicationId([FromRoute] int applicationId)
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var result = await applicationsService.GetApplicationAsync(userId, applicationId);
+        return Ok(result);
+    }
 }
