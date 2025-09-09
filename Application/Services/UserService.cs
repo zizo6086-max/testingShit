@@ -1,16 +1,20 @@
 ﻿using Application.Common.Interfaces;
 using Application.DTOs;
+using Application.Mappers;
 using Domain.Models;
 using Domain.Models.Auth;
+using Infrastructure.DataAccess;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Application.Services;
 
 public class UserService(UserManager<AppUser> userManager,
     ILogger<UserService> logger,
-    IPhotoService photoService) : IUserService
+    IPhotoService photoService, AppDbContext context,
+    IPaginationService<AppUser> paginationService) : IUserService
 {
     public async Task<UserDto> GetUserInfoAsync(int userId)
     {
@@ -163,4 +167,70 @@ public class UserService(UserManager<AppUser> userManager,
             Message = "Changed Password"
         };
     }
+
+ public async Task<UserListResponseDto> GetAllUsersAsync(
+    string? role, 
+    int page = 1, 
+    int limit = 25, 
+    string sortBy = "Id", 
+    string sortType = "asc")
+{
+    // Base join
+    var query =
+        from u in context.Users
+        join ur in context.UserRoles on u.Id equals ur.UserId
+        join r in context.Roles on ur.RoleId equals r.Id
+        select new { u, r.Name };
+
+    // Filter by role if provided
+    if (!string.IsNullOrEmpty(role))
+    {
+        query = query.Where(x => x.Name == role);
+    }
+
+    // Group by user, but defer materializing roles list to memory
+    var grouped = query
+        .GroupBy(x => x.u)
+        .Select(g => new
+        {
+            User = g.Key,
+            Roles = g.Select(x => x.Name) // keep as IEnumerable<string>
+        });
+
+    // Sorting (server-side)
+    var sorted = (sortBy.ToLower(), sortType.ToLower()) switch
+    {
+        ("id", "asc")       => grouped.OrderBy(x => x.User.Id),
+        ("id", "desc")      => grouped.OrderByDescending(x => x.User.Id),
+        ("username", "asc") => grouped.OrderBy(x => x.User.UserName),
+        ("username", "desc")=> grouped.OrderByDescending(x => x.User.UserName),
+        ("email", "asc")    => grouped.OrderBy(x => x.User.Email),
+        ("email", "desc")   => grouped.OrderByDescending(x => x.User.Email),
+        _ => grouped.OrderBy(x => x.User.Id)
+    };
+
+    // Count before paging
+    var totalCount = await sorted.CountAsync();
+
+    // Paging + move to memory for roles list
+    var result = sorted
+        .Skip((page - 1) * limit)
+        .Take(limit)
+        .AsEnumerable() // switch to LINQ-to-Objects
+        .Select(g => new UserListDto(
+            g.User.Id,
+            g.User.UserName,
+            g.User.Email,
+            g.User.EmailConfirmed,
+            g.User.CreatedOn.DateTime,
+            g.Roles.ToList(), // now safe
+            g.User.ImageUrl
+        )).ToList();
+
+    return new UserListResponseDto
+    {
+        Results = result,
+        ItemCount = totalCount
+    };
+}
 }

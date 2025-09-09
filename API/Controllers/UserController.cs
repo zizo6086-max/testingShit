@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Application.Common.Interfaces;
 using Application.DTOs;
+using Domain.Constants;
 using Domain.Models;
 using Domain.Models.Auth;
 using Microsoft.AspNetCore.Authorization;
@@ -57,5 +58,19 @@ public class UserController(IUserService userService, UserManager<AppUser> userM
             return Ok(result);
         }
         return BadRequest(result);
+    }
+
+    [HttpGet]
+    [Authorize(Roles = AuthConstants.Roles.Admin)]
+    public async Task<IActionResult> GetAllUsers(
+        [FromQuery] string? role,
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 25,
+        [FromQuery] string sortBy = "Role",
+        [FromQuery] string sortType = "asc")
+    {
+        var result = 
+            await userService.GetAllUsersAsync(role, page, limit, sortBy, sortType);
+        return Ok(result);
     }
 }
