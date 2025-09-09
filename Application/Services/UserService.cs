@@ -220,7 +220,7 @@ public class UserService(UserManager<AppUser> userManager,
         .Select(g => new UserListDto(
             g.User.Id,
             g.User.UserName,
-            g.User.Email,
+            g.User.Email!,
             g.User.EmailConfirmed,
             g.User.CreatedOn.DateTime,
             g.Roles.ToList(), // now safe
@@ -233,4 +233,27 @@ public class UserService(UserManager<AppUser> userManager,
         ItemCount = totalCount
     };
 }
+
+    public async Task<Result> GetUserAsync(int userId)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user == null) return new Result()
+        {
+            Message = "User not found"
+        };
+        var roles = await userManager.GetRolesAsync(user);
+        var dto = new UserListDto(user.Id,
+            user.UserName,
+            user.Email!,
+            user.EmailConfirmed,
+            user.CreatedOn.DateTime,
+            roles.ToList(),
+            user.ImageUrl);
+        return new Result()
+        {
+            Success = true,
+            Message = "User Found",
+            Data = dto
+        };
+    }
 }

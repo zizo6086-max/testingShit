@@ -14,5 +14,6 @@ public interface IUserService
          int limit = 25,
          string sortBy = "Id",
          string sortType = "asc");
+    Task<Result> GetUserAsync(int userId);
 
 }

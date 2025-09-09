@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
-public class UserController(IUserService userService, UserManager<AppUser> userManager, IPhotoService photoService,ILogger<UserController> logger): ControllerBase
+public class UsersController(IUserService userService, UserManager<AppUser> userManager, IPhotoService photoService,ILogger<UsersController> logger): ControllerBase
 {
     [HttpGet("me")]
     [Authorize]
@@ -72,5 +72,18 @@ public class UserController(IUserService userService, UserManager<AppUser> userM
         var result = 
             await userService.GetAllUsersAsync(role, page, limit, sortBy, sortType);
         return Ok(result);
+    }
+
+    [HttpGet("{id}")]
+    [Authorize(Roles = AuthConstants.Roles.Admin)]
+    public async Task<IActionResult> GetById([FromRoute] int id)
+    {
+        var result = await userService.GetUserAsync(id);
+        if (result.Success)
+        {
+            return Ok(result);
+        }
+
+        return NotFound(result);
     }
 }
