@@ -224,7 +224,8 @@ public class UserService(UserManager<AppUser> userManager,
             g.User.EmailConfirmed,
             g.User.CreatedOn.DateTime,
             g.Roles.ToList(), // now safe
-            g.User.ImageUrl
+            g.User.ImageUrl,
+            g.User.IsBanned
         )).ToList();
 
     return new UserListResponseDto
@@ -248,12 +249,64 @@ public class UserService(UserManager<AppUser> userManager,
             user.EmailConfirmed,
             user.CreatedOn.DateTime,
             roles.ToList(),
-            user.ImageUrl);
+            user.ImageUrl, user.IsBanned);
         return new Result()
         {
             Success = true,
             Message = "User Found",
             Data = dto
+        };
+    }
+
+    public async Task<Result> BanUserAsync(int userId)
+    {
+        var user = context.Users.FirstOrDefault(x => x.Id == userId);
+        if (user == null)
+        {
+            return new Result()
+            {
+                Message = "User not found"
+            };
+        }
+        var userRefreshTokens = context
+            .RefreshTokens
+            .Where(x => x.UserId == userId);
+        
+        context.RefreshTokens.RemoveRange();
+        user.IsBanned = true;
+        context.Users.Update(user);
+        var success = await context.SaveChangesAsync();
+        if (success > 0)
+        {
+            return new Result()
+            {
+                Success = true,
+                Message = "User Banned"
+            };
+        }
+
+        return new Result()
+        {
+            Message = "User could not be banned"
+        };
+    }
+
+    public async Task<Result> UnbanUserAsync(int userId)
+    {
+        var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+        if (user == null)
+        {
+            return new Result()
+            {
+                Message = "User Not found"
+            };
+        }
+        user.IsBanned = false;
+        await context.SaveChangesAsync();
+        return new Result()
+        {
+            Success = true,
+            Message = "User Unbanned"
         };
     }
 }

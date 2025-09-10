@@ -86,4 +86,27 @@ public class UsersController(IUserService userService, UserManager<AppUser> user
 
         return NotFound(result);
     }
+
+    [HttpPost("ban/{id}")]
+    [Authorize(Roles = AuthConstants.Roles.Admin)]
+    public async Task<IActionResult> BanUser([FromRoute] int id) 
+    {
+        var result = await userService.BanUserAsync(id);
+        if (result.Success)
+        {
+            return NoContent();
+        }
+        return BadRequest(result);
+    } 
+    [HttpPost("unban/{id}")]
+    [Authorize(Roles = AuthConstants.Roles.Admin)]
+    public async Task<IActionResult> UnBanUser([FromRoute] int id)
+    {
+        var result = await userService.UnbanUserAsync(id);
+        if (result.Success)
+        {
+            return NoContent();
+        }
+        return BadRequest(result);
+    }
 }

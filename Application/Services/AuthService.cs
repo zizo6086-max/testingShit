@@ -116,6 +116,11 @@ public class AuthService(
                 throw new SecurityTokenException("User is not found");
             }
 
+            if (user.IsBanned)
+            {
+                throw new SecurityTokenException("User is banned");
+            }
+
             var newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(user.Id);
             var claims = await GenerateUserClaimsAsync(user);
             var (accessToken, expiresAt) = await jwtTokenService.GenerateJwtTokenAsync(claims);
@@ -184,6 +189,13 @@ public class AuthService(
                 return result;
             }
 
+            if (user.IsBanned)
+            {
+                result.Success = false;
+                result.Message = "User is banned";
+                return result;
+            }
+            
             logger.LogAuthenticationAttempt(loginDto.EmailOrUsername, true);
             logger.LogUserAction("Login", user.Id.ToString());
             
@@ -242,7 +254,11 @@ public class AuthService(
             {
                 return new AuthResult { Message = "User not found" };
             }
-            
+
+            if (user.IsBanned)
+            {
+                return new AuthResult { Message = "User is banned" };
+            }
             var claims = await GenerateUserClaimsAsync(user);
             var (accessToken, expiresAt) = await jwtTokenService.GenerateJwtTokenAsync(claims);
             

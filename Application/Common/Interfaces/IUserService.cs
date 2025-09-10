@@ -15,5 +15,7 @@ public interface IUserService
          string sortBy = "Id",
          string sortType = "asc");
     Task<Result> GetUserAsync(int userId);
+    Task<Result> BanUserAsync(int userId);
+    Task<Result> UnbanUserAsync(int userId);
 
 }
