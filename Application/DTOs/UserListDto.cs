@@ -6,5 +6,6 @@ public record UserListDto(
     string Email,
     bool IsEmailVerified,
     DateTime CreatedAt,
-    List<string> roles,
-    string imageUrl);
+    List<string> Roles,
+    string ImageUrl,
+    bool IsBanned);

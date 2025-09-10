@@ -12,6 +12,7 @@ public class AppUser:IdentityUser<int>
     public DateTimeOffset CreatedOn { get; set; } = DateTimeOffset.UtcNow;
     public string ImageUrl { get; set; }
     public ulong RowVersion { get; set; }
+    public bool IsBanned { get; set; } = false;
     
     // Properties for external authentication
     public string? GoogleId { get; set; }
