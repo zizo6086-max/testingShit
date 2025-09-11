@@ -44,12 +44,46 @@ public class ApplicationsController(IApplicationsService applicationsService) : 
         return Ok(response);
     }
 
-    [HttpGet("{ApplicationId}")]
+    [HttpGet("me")]
     [Authorize]
-    public async Task<IActionResult> GetByApplicationId([FromRoute] int applicationId)
+    public async Task<IActionResult> GetByApplicationId()
     {
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
-        var result = await applicationsService.GetApplicationAsync(userId, applicationId);
+        var result = await applicationsService.GetApplicationAsync(userId);
         return Ok(result);
+    }
+
+    [HttpPost("Deny-Application/{applicationId:int}")]
+    [Authorize(Roles = AuthConstants.Roles.Admin)]
+    public async Task<IActionResult> DenyApplication([FromRoute] int applicationId)
+    {
+        var result = await applicationsService.DenyApplicationAsync(applicationId);
+        if (result.Success)
+        {
+            return Ok(result);
+        }
+        return BadRequest(result);
+    }
+    [HttpPost("Approve-Application/{applicationId:int}")]
+    [Authorize (Roles = AuthConstants.Roles.Admin)]
+    public async Task<IActionResult> ApproveApplication([FromRoute] int applicationId)
+    {
+        var result = await applicationsService.ApproveApplicationAsync(applicationId);
+        if (result.Success)
+        {
+            return Ok(result);
+        } 
+        return BadRequest(result);
+    }
+    [HttpPost("Delete-Application/{applicationId:int}")]
+    [Authorize(Roles = AuthConstants.Roles.Admin)]
+    public async Task<IActionResult> DeleteApplication([FromRoute] int applicationId)
+    {
+        var result = await applicationsService.DeleteApplicationAsync(applicationId);
+        if (result.Success)
+        {
+            return Ok(result);
+        }
+        return BadRequest(result);
     }
 }

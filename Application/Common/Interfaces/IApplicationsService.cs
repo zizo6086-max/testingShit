@@ -14,5 +14,9 @@ public interface IApplicationsService
         int limit = 25,
         string? status = null,
         CancellationToken cancellationToken = default);
-    public Task<Result> GetApplicationAsync(int userId, int id, CancellationToken cancellationToken = default); 
+    public Task<Result> GetApplicationAsync(int userId, CancellationToken cancellationToken = default);
+    public Task<Result> DenyApplicationAsync(int id, CancellationToken cancellationToken = default);
+    public Task<Result> ApproveApplicationAsync(int id, CancellationToken cancellationToken = default);
+    public Task<Result> DeleteApplicationAsync(int id, CancellationToken cancellationToken = default);
+    
 }

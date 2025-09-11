@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services;
 
-public class ApplicationsService(ILogger<ApplicationsService> logger, AppDbContext context, UserManager<AppUser> userManager, IPaginationService<SellerApplication> paginationService)
+public class ApplicationsService(ILogger<ApplicationsService> logger, AppDbContext context, UserManager<AppUser> userManager, IRoleService roleService, IPaginationService<SellerApplication> paginationService)
     : IApplicationsService
 {
 
@@ -88,30 +88,96 @@ public class ApplicationsService(ILogger<ApplicationsService> logger, AppDbConte
         };
     }
 
-    public async Task<Result> GetApplicationAsync(int userId, int id, CancellationToken cancellationToken = default)
+    public async Task<Result> GetApplicationAsync(int userId, CancellationToken cancellationToken = default)
     {
-        var application = await context.SellerApplications
-            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken: cancellationToken);
-        var user = await userManager.FindByIdAsync(userId.ToString());
-        var userRole = await userManager.GetRolesAsync(user!); // already have a token
-        if (application?.UserId != userId && !userRole.Contains(AuthConstants.Roles.Admin))
+        var applications = context.SellerApplications
+            .Where(a => a.UserId == userId);
+        
+        var result = await applications
+            .Select(a => a
+                .ToListItemDto())
+            .ToListAsync(cancellationToken: cancellationToken);
+        
+        return new Result()
+        {
+            Success = true,
+            Message = "User Applications",
+            Data = result
+        };
+    }
+
+    public async Task<Result> DenyApplicationAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var application = await context.SellerApplications.Where(a => a.Status != SellerApplicationConstants.Deleted)
+            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        if (application is null)
         {
             return new Result()
             {
-                Message = "Applicaiton not found or accessable"
+                Message = "Application Not found"
             };
         }
 
-        if (application != null)
+        var result = await roleService.RemoveSellerAsync(application.UserId);
+        if (!result.Success)
+        {
             return new Result()
             {
-                Success = true,
-                Message = "Found",
-                Data = application.ToListItemDto()
+                Message = "Failed to Remove seller role"
             };
+        }
+        application.Status = SellerApplicationConstants.Rejected;
+        await context.SaveChangesAsync(cancellationToken);
         return new Result()
         {
-            Message = "Application not found"
+            Success = true,
+            Message = "Application Denied"
+        };
+    }
+
+    public async Task<Result> ApproveApplicationAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var application = await context.SellerApplications.Where(a => a.Status != SellerApplicationConstants.Deleted)
+            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken: cancellationToken);
+        if (application is null)
+        {
+            return new Result()
+            {
+                Message = "Application Not found"
+            };
+        }
+        var result = await roleService.AddSellerAsync(userId: application.UserId);
+        if (!result.Success)
+            return new Result()
+            {
+                Message = "Could not approve application"
+            };
+        application.Status = SellerApplicationConstants.Approved;
+        await context.SaveChangesAsync(cancellationToken);
+        return new Result()
+        {
+            Success = true,
+            Message = "Application Approved"
+        };
+
+    }
+
+    public async Task<Result> DeleteApplicationAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var application = await context.SellerApplications.FirstOrDefaultAsync(a => a.Id == id, cancellationToken: cancellationToken);
+        if (application is null)
+        {
+            return new Result()
+            {
+                Message = "Application Not found"
+            };
+        }
+        application.Status = SellerApplicationConstants.Deleted;
+        await context.SaveChangesAsync(cancellationToken);
+        return new Result()
+        {
+            Success = true,
+            Message = "Application Deleted"
         };
     }
 }
