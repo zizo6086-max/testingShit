@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Application.Common.Interfaces;
 using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
@@ -29,5 +30,31 @@ public class RoleController(IRoleService roleService) : ControllerBase
             return BadRequest(result);
         }
         return Ok(result);
+    }
+
+    [HttpPost("Add-Admin/{userId:int}")]
+    [Authorize(Roles = AuthConstants.Roles.Admin)]
+    public async Task<IActionResult> AddAdmin([FromRoute] int userId)
+    {
+        var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var result = await roleService.AddAdminAsync(userId, adminId);
+        if (result.Success)
+        {
+            return Ok(result);
+        }
+        return BadRequest(result);
+    }
+
+    [HttpDelete("Remove-Admin/{userId:int}")]
+    [Authorize(Roles = AuthConstants.Roles.Admin)]
+    public async Task<IActionResult> RemoveAdmin([FromRoute] int userId)
+    {
+        var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var result = await roleService.RemoveAdminAsync(userId, adminId);
+        if (result.Success)
+        {
+            return Ok(result);
+        }
+        return BadRequest(result);
     }
 }
