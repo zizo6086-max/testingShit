@@ -24,7 +24,7 @@ public class RoleController(IRoleService roleService) : ControllerBase
     [HttpDelete("Remove-Seller/{userId:int}")]
     public async Task<IActionResult> RemoveSeller([FromRoute] int userId)
     {
-        var result = await roleService.RemoveSellerRole(userId);
+        var result = await roleService.RemoveSellerAsync(userId);
         if (!result.Success)
         {
             return BadRequest(result);

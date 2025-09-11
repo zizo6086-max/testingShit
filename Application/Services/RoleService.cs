@@ -25,6 +25,15 @@ public class RoleService(
                 Message = "User not found"
             };
         }
+        var userRoles = await userManager.GetRolesAsync(user);
+        if (userRoles.Contains(AuthConstants.Roles.Seller))
+        {
+            return new Result()
+            {
+                Success = true,
+                Message = "User Is a Seller"
+            };
+        }
         var result = await userManager.AddToRoleAsync(user, AuthConstants.Roles.Seller);
         if (!result.Succeeded)
             return new Result()
@@ -44,7 +53,7 @@ public class RoleService(
 
     }
 
-    public async Task<Result> RemoveSellerRole(int userId)
+    public async Task<Result> RemoveSellerAsync(int userId)
     {
         var user = await userManager.FindByIdAsync(userId.ToString());
         if (user == null)
@@ -59,6 +68,7 @@ public class RoleService(
         {
             return new Result()
             {
+                Success = true,
                 Message = "User does not have seller role"
             };
         }
