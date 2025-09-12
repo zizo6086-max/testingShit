@@ -27,6 +27,10 @@ public static class DependencyInjection
         services.AddScoped<IKinguinProductSyncService, KinguinProductSyncService>();
         services.AddScoped<IKinguinProductQueryService, KinguinProductQueryService>();
         
+        // Webhook services
+        services.AddScoped<IKinguinWebhookProcessingService, KinguinWebhookProcessingService>();
+        services.AddScoped<IWebhookAnalyticsService, WebhookAnalyticsService>();
+        
         // Generic pagination service
         services.AddScoped(typeof(IPaginationService<>), typeof(PaginationService<>));
         services.AddScoped<IStoreConfigService, StoreConfigService>();

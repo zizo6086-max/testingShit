@@ -15,4 +15,12 @@ public interface IKinguinApiService
         int page = 1,
         int limit = 100,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Fetches a single product from Kinguin API by product ID
+    /// </summary>
+    /// <param name="productId">Product ID to fetch</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Product details or null if not found</returns>
+    Task<KinguinProductDto?> GetSingleProductAsync(string productId, CancellationToken cancellationToken = default);
 }

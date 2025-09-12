@@ -65,4 +65,34 @@ public class KinguinApiService : IKinguinApiService
             throw;
         }
     }
+
+    public async Task<KinguinProductDto?> GetSingleProductAsync(string productId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Use v2 API endpoint for single product fetch
+            var v2BaseUrl = _baseUrl.Replace("/v1", "/v2");
+            var url = $"{v2BaseUrl}/products/{productId}";
+
+            var response = await _httpClient.GetAsync(url, cancellationToken);
+            
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogInformation("Product not found in API: {ProductId}", productId);
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+
+            var jsonContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            var result = JsonSerializer.Deserialize<KinguinProductDto>(jsonContent, _jsonOptions);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching single product from Kinguin API: {ProductId}", productId);
+            return null;
+        }
+    }
 }
